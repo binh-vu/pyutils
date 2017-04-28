@@ -5,7 +5,7 @@ from distutils.core import setup
 
 setup(
     name='utils',
-    version='1.0.0',
+    version='1.0.2',
     description='Utilities for python',
     author='Binh Vu',
     author_email='binhlvu@gmail.com',

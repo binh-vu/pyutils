@@ -48,23 +48,27 @@ class Configuration(object):
             else:
                 self.__conf[key] = value
 
+            self.__dict__[key] = self.__conf[key]
+
     def set_conf(self, key, value):
         if type(value) is dict:
             value = Configuration(value, self.__workdir)
         elif type(value) is str:
             value = StringConf(value, self.__workdir)
 
-        conf = self.__conf
+        conf = self
         p_keys = key.split('.')
         for p_key in p_keys[:-1]:
             assert type(conf) is Configuration, 'Cannot assign property to primitive object'
             if p_key not in conf.__conf:
                 conf.__conf[p_key] = Configuration(OrderedDict(), self.__workdir)
+                conf.__dict__[p_key] = conf.__conf[p_key]
 
             conf = conf.__conf[p_key]
 
         assert type(conf) is Configuration, 'Cannot assign property to primitive object'
         conf.__conf[p_keys[-1]] = value
+        conf.__dict__[p_keys[-1]] = value
         return self
     
     def __getattr__(self, name):
