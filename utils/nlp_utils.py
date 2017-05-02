@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import re
-from problems.config import *
 from HTMLParser import HTMLParser
 from pycorenlp import StanfordCoreNLP
 
