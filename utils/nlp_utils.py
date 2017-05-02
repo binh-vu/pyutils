@@ -1,46 +1,36 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import re, spacy
+import re
+from problems.config import *
 from HTMLParser import HTMLParser
+from pycorenlp import StanfordCoreNLP
 
 nlp = None
 def get_nlp():
     global nlp
     if nlp is None:
-        """
-            spaCy actually have a terrible document for custom tokenizer and it doesn't work.
-            Hack directly to the internal API to make it work
-        """
-        # Defaults = spacy.load('en').__class__.Defaults
-        # if Defaults.infixes[-1] != '/':
-        #     infixes = list(Defaults.infixes)
-        #     infixes.append('/')
-        #     infixes = tuple(infixes)
-        #     Defaults.infixes = infixes
-        # if Defaults.suffixes[-1] != '/':
-        #     suffixes = list(Defaults.suffixes)
-        #     suffixes.append('/')
-        #     suffixes = tuple(suffixes)
-        #     Defaults.suffixes = suffixes
-        # if Defaults.prefixes[-1] != '/':
-        #     prefixes = list(Defaults.prefixes)
-        #     prefixes.append('/')
-        #     prefixes = tuple(prefixes)
-        #     Defaults.prefixes = prefixes
-
-        nlp = spacy.load('en')
-        
+        nlp = StanfordCoreNLP('http://localhost:9000')
     return nlp
 
 def tokenize(text, return_position=False):
-    nlp       = get_nlp()
-    tokens    = nlp(text.decode('utf-8') if type(text) is str else text)
-    positions = [(w.idx, w.idx + len(w.text)) for w in tokens]
-    tokens    = [w.text for w in tokens]
+    output = get_nlp().annotate(text.encode('utf-8'), properties={'annotators': 'tokenize,ssplit', 'outputFormat': 'json'})
+    tokens = []
+    position = []
+
+    for sentence in output['sentences']:
+        for token in sentence['tokens']:
+            offset = token['characterOffsetBegin']
+            for i, x in enumerate(token['originalText'].split('/')):
+                if x == '':
+                    continue
+                    
+                position.append((offset, offset + len(x)))
+                tokens.append(x)
+                offset = offset + len(x) + 1
 
     if return_position:
-        return tokens, positions
+        return tokens, position
     return tokens
 
 class MLStripper(HTMLParser):

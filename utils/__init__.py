@@ -9,5 +9,4 @@ import jupyter_utils as jupyter
 import search_utils as search
 import random_utils as random
 import config_utils as config
-
-from progress import Progress
+import progress_utils as progress

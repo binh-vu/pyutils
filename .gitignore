@@ -1,5 +1,9 @@
 *.pyc
 .*
 build/
-
+dist/
+*.egg-info
 !.gitignore
+rand_performance_analysis.py
+utils.egg-info/
+utils/random_utils/

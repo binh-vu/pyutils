@@ -1,7 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import re
 import os
+import shutil
 import yaml
 from collections import OrderedDict
 
@@ -23,14 +25,38 @@ class StringConf(str):
     def as_path(self):
         return os.path.abspath(os.path.join(self.__workdir, self))
 
-    def ensure_dir_exists(self):
+    def ensure_dir_existence(self):
         if not os.path.exists(self.as_path()):
             os.makedirs(self.as_path())
+
+    def backup_dir(self):
+        path = self.as_path()
+        dirname = os.path.dirname(path)
+        basename = os.path.basename(path)
+
+        if os.path.exists(path):
+            # find the most recent back up
+            backup_reg = re.compile('^-\d+$')
+            backup_versions = [
+                int(fname.replace(basename + '-', ''))
+                for fname in os.listdir(dirname)
+                if fname.startswith(basename) and backup_reg.match(fname.replace(basename, '')) is not None
+            ]
+            if len(backup_versions) == 0:
+                most_recent_version = 0
+            else:
+                most_recent_version = max(backup_versions)
+
+            # do the backup
+            shutil.move(path, os.path.join(dirname, basename + '-' + str(most_recent_version + 1)))
+
+        # create new folder to work with
+        self.ensure_dir_existence()
 
 
 class Configuration(object):
 
-    def __init__(self, dict_object, workdir):
+    def __init__(self, dict_object, workdir=''):
         # if __workdir__ is defined in dict_object, it overwrites the bounded workdir
         if '__workdir__' in dict_object:
             workdir = os.path.join(workdir, dict_object.pop('__workdir__'))
@@ -70,7 +96,19 @@ class Configuration(object):
         conf.__conf[p_keys[-1]] = value
         conf.__dict__[p_keys[-1]] = value
         return self
-    
+
+    def get_conf(self, key):
+        """
+            Get configuration provided by the dot string
+            :param key:
+            :return:
+        """
+        conf = self
+        props = key.split('.')
+        for prop in props[:-1]:
+            conf = conf.__conf[prop]
+        return conf.__conf[props[-1]]
+
     def __getattr__(self, name):
         return self.__conf[name]
     
@@ -79,6 +117,16 @@ class Configuration(object):
     
     def __iter__(self):
         return self.__conf.iterkeys()
+
+    def to_dict(self):
+        dict_object = {
+            '__workdir__': self.__workdir
+        }
+        for k, v in self.__conf.iteritems():
+            if isinstance(v, Configuration):
+                v = v.to_dict()
+            dict_object[k] = v
+        return dict_object
 
 
 def load_config(fpath):
@@ -99,3 +147,8 @@ def load_config(fpath):
     
     with open(fpath, 'rb') as f:
         return Configuration(load_yaml_file(f), workdir=os.path.dirname(fpath))
+
+
+def write_config(config, fpath):
+    with open(fpath, 'wb') as f:
+        yaml.dump(config.to_dict(), f, default_flow_style=False)

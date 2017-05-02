@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import numpy as np
+import numpy as np, utils
 from utils import random
 from nose.tools import *
 
@@ -19,6 +19,7 @@ def test_choice_noreplace_with_prob():
     for _ in xrange(100):
         ok_(np.array_equal(random_state.choice(2, replace=False), np_rand.choice(a, 2, replace=False, p=p)))
         ok_(np.array_equal(random_state.choice_p_backup, random_state.choice_p))
+
 
 def test_choice_noreplace_heavytest():
     a = 400000
