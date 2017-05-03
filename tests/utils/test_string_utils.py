@@ -4,15 +4,16 @@
 from utils.string_utils import *
 from nose.tools import *
 
-class HyperLinkAnnotation(Annotation):
 
+class HyperLinkAnnotation(Annotation):
     def molding(self, string):
         return '<a>%s</a>' % string
 
-class HeaderAnnotation(Annotation):
 
+class HeaderAnnotation(Annotation):
     def molding(self, string):
         return '<h1>%s</h1>' % string
+
 
 def test_annotating_no_nested():
     string = '0123456789'
@@ -24,6 +25,7 @@ def test_annotating_no_nested():
     new_string = annotate_string(string, annotations, policy={})
     eq_(new_string, '0<a>123</a>45<a>678</a>9')
 
+
 def test_annotating_nested():
     string = '0123456789'
     annotations = [
@@ -34,6 +36,7 @@ def test_annotating_nested():
 
     new_string = annotate_string(string, annotations, policy={})
     eq_(new_string, '0<a>1<a>2</a>3</a>45<a>678</a>9')
+
 
 def test_annotating_nested_ignore():
     string = '0123456789'
@@ -48,6 +51,7 @@ def test_annotating_nested_ignore():
     })
     eq_(new_string, '0<a>123</a>45<a>678</a>9')
 
+
 @raises(PolicyViolation)
 def test_annotating_nested_with_exception():
     string = '0123456789'
@@ -57,9 +61,10 @@ def test_annotating_nested_with_exception():
         HyperLinkAnnotation(2, 3),
     ]
 
-    new_string = annotate_string(string, annotations, policy={
+    annotate_string(string, annotations, policy={
         'NO_NESTED_ANNOTATION': True
     })
+
 
 def test_annotating_cross_annotation():
     string = '0123456789'
@@ -74,6 +79,7 @@ def test_annotating_cross_annotation():
     })
     eq_(new_string, '0<a>123456</a>789')
 
+
 @raises(PolicyViolation)
 def test_annotating_cross_annotation_with_exception():
     string = '0123456789'
@@ -83,9 +89,10 @@ def test_annotating_cross_annotation_with_exception():
     ]
 
     # keep range which have longest length
-    new_string = annotate_string(string, annotations, policy={
+    annotate_string(string, annotations, policy={
         'IGNORE_CROSSED_ANNOTATION': False
     })
+
 
 def test_annotating_merge():
     string = '0123456789'
@@ -101,4 +108,4 @@ def test_annotating_merge():
     new_string = annotate_string(string, annotations, policy={
         'MERGE_FUNCTION': lambda a, b: a if isinstance(a, HeaderAnnotation) else b
     })
-    eq_(new_string, '0<h1>123</h1>45<a>678</a>9')   
+    eq_(new_string, '0<h1>123</h1>45<a>678</a>9')

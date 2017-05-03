@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import numpy as np, utils
-from utils import random
+import numpy as np
 from nose.tools import *
+
+from utils import random
 
 
 def test_choice_noreplace_with_prob():
@@ -16,14 +17,14 @@ def test_choice_noreplace_with_prob():
     random_state.set_choice_parameters(a, p)
 
     np_rand = np.random.RandomState(seed=seed)
-    for _ in xrange(100):
+    for _ in range(100):
         ok_(np.array_equal(random_state.choice(2, replace=False), np_rand.choice(a, 2, replace=False, p=p)))
         ok_(np.array_equal(random_state.choice_p_backup, random_state.choice_p))
 
 
 def test_choice_noreplace_heavytest():
     a = 400000
-    p = [np.random.randint(0, 10000) for _ in xrange(a)]
+    p = [np.random.randint(0, 10000) for _ in range(a)]
     total_p = sum(p)
     p = [float(x) / total_p for x in p]
 
@@ -33,6 +34,6 @@ def test_choice_noreplace_heavytest():
 
     np_rand = np.random.RandomState(seed=seed)
     for k in [2, 5, 11]:
-        for _ in xrange(500):
+        for _ in range(500):
             ok_(np.array_equal(random_state.choice(k, replace=False), np_rand.choice(a, k, replace=False, p=p)))
             ok_(np.array_equal(random_state.choice_p_backup, random_state.choice_p))
