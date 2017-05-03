@@ -121,6 +121,6 @@ if __name__ == '__main__':
     progress = Progress(len(tasks))
 
     for task in tasks:
-        print progress.finish_one()
+        print(progress.finish_one())
         # time.sleep(random.random())
         time.sleep(1)

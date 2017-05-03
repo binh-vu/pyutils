@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+from typing import List, Dict, Callable, Any
 
 from utils.range_utils import Range, build_interval_tree
-from collections import namedtuple
-from itertools import groupby
+
 
 def is_capitalize(s): return s[0] == s[0].upper()
 
-class Annotation(Range):
 
+class Annotation(Range):
     def __init__(self, start, end):
         super(Annotation, self).__init__(start, end)
 
@@ -18,13 +18,16 @@ class Annotation(Range):
     def molding(self, string):
         return string
 
-class PolicyViolation(Exception): pass
 
-def annotate_string(string, annotations, policy):
+class PolicyViolation(Exception):
+    pass
+
+
+def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str, Any]) -> str:
     """
-        @param string str: text to be annotated
-        @param annotations list<Annotation>: list of annotation need to be annotated
-        @param policy dict<str, bool>: annotation policy, can be:
+        :param string: text to be annotated
+        :param annotations: list of annotation need to be annotated
+        :param policy: annotation policy, can be:
             NO_NESTED_ANNOTATION: default is false, the exception will be thrown if annotations are crossed or contain any other annotations
             IGNORE_NESTED_ANNOTATION: default is false. When the value is true, the contained annotation will be ignore, and keep only the surrounded annotation.
             IGNORE_CROSSED_ANNOTATION: default is true.
@@ -33,9 +36,10 @@ def annotate_string(string, annotations, policy):
             JUDGE_FUNC: when solving conflict, this function decide which node to keep and which node to discard
             MERGE_FUNC: when this function is provided, it will decide when two node are in the same range, which one to keep and which one to discard
             MERGE_ALL_FUNC: when this function is provided, it will try to merge all crossed nodes if possible, return array of new crossed nodes
-        @return string: annotated string
+        :return: annotated string
     """
-    def remove_conflicted_range(node, judge):
+
+    def remove_conflicted_range(node, judge: Callable[[Annotation], Annotation]) -> bool:
         """
             Remove conflicted children in this node, and return a bool value indicate that
             there is any conflict has been solved. The children of the node is 
@@ -44,10 +48,9 @@ def annotate_string(string, annotations, policy):
             The algorithm is very naive, it will compare 2 successive nodes and 
             choose which node to dismiss based on the judge function
 
-            @param node
-            @param judge func(Annotation, Annotation): bool 
-                True if first argument is better than the second argument
-            @return bool
+            :param node:
+            :param judge: True if first argument is better than the second argument
+            :return: bool
         """
         if len(node['children']) <= 1:
             return False
@@ -91,7 +94,7 @@ def annotate_string(string, annotations, policy):
             substring = child['range'].shift(-offset).get_anchor(string)
             substring = annotate_substring(child['range'].start, substring, child)
 
-            substrings.append(string[ranges[i*2]:ranges[i*2+1]])
+            substrings.append(string[ranges[i * 2]:ranges[i * 2 + 1]])
             substrings.append(substring)
         substrings.append(string[ranges[-2]:ranges[-1]])
 
@@ -101,7 +104,7 @@ def annotate_string(string, annotations, policy):
         return string
 
     # current policy
-    default_policy = { 
+    default_policy = {
         'NO_NESTED_ANNOTATION': False,
         'IGNORE_CROSSED_ANNOTATION': True,
         'IGNORE_NESTED_ANNOTATION': False,
@@ -118,7 +121,7 @@ def annotate_string(string, annotations, policy):
     g_annotations = [[annotations[0]]]
     g_range = annotations[0]
 
-    for i in xrange(1, len(annotations)):
+    for i in range(1, len(annotations)):
         if g_range.is_overlap(annotations[i]):
             g_annotations[-1].append(annotations[i])
             g_range = g_range.merge(annotations[i])
@@ -133,7 +136,7 @@ def annotate_string(string, annotations, policy):
         tmp_annotations = []
         for g_annotation in g_annotations:
             tmp_annotation = [g_annotation[0]]
-            for i in xrange(1, len(g_annotation)):
+            for i in range(1, len(g_annotation)):
                 if tmp_annotation[-1].same_range(g_annotation[i]):
                     tmp_annotation[-1] = default_policy['MERGE_FUNCTION'](tmp_annotation[-1], g_annotation[i])
                 else:
@@ -181,11 +184,11 @@ def annotate_string(string, annotations, policy):
     annotated_strings = []
     for i, tree in enumerate(annotation_trees):
         substring = annotate_substring(
-            tree['range'].start, 
+            tree['range'].start,
             tree['range'].get_anchor(string),
             tree
         )
-        annotated_strings.append(string[ranges[i*2]:ranges[i*2+1]])
+        annotated_strings.append(string[ranges[i * 2]:ranges[i * 2 + 1]])
         annotated_strings.append(substring)
 
     annotated_strings.append(string[ranges[-2]:ranges[-1]])

@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from collections import OrderedDict
-from urlparse import urlparse, parse_qs, urlunparse
-from urllib import urlencode
+from urllib.parse import urlencode
+from urllib.parse import urlparse, parse_qs, urlunparse
+
 
 class URLParam(object):
-
     def __init__(self, scheme, netloc, path, params, query, fragment):
         self.scheme = scheme
         self.netloc = netloc
@@ -46,6 +46,7 @@ class URLParam(object):
             urlencode(self.query, doseq=True),
             self.fragment
         ))
+
 
 def parse(url):
     result = urlparse(url)

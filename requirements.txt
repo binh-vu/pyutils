@@ -1,1 +1,7 @@
+pyyaml
+IPython
+json2html
+simplejson
+pycorenlp
+ujson
 numpy

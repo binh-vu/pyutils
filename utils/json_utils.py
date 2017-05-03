@@ -1,22 +1,25 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import copy, simplejson as json, warnings
 from datetime import datetime
-from collections import OrderedDict
+from typing import List, Type, Any, Callable
+
+import simplejson as json
 from bson.objectid import ObjectId
 
+
 def format_dt(dt):
-    if dt.tzinfo == None:
+    if dt.tzinfo is None:
         return dt.strftime('%Y-%m-%d %H:%M:%S.%f') + '+0000'
 
     return dt.strftime('%Y-%m-%d %H:%M:%S.%f%z')
+
 
 class DynamicJSONEncoder(json.JSONEncoder):
 
     def default(self, obj):
         if isinstance(obj, datetime):
-            return { '_type': 'DateTime', 'value': format_dt(obj) }
+            return {'_type': 'DateTime', 'value': format_dt(obj)}
 
         if isinstance(obj, ObjectId):
             return str(obj)
@@ -30,14 +33,11 @@ class DynamicJSONEncoder(json.JSONEncoder):
 
         return json.JSONEncoder.default(self, obj)
 
-def get_object_hook(classes):
-    """
-        Get object hook function that can convert dict back to classes
 
-        @param classes list<PYTHON_CLASS>
-    """
+def get_object_hook(classes: List[Type[object]]) -> Callable[[Any], Any]:
+    """Get object hook function that can convert dict back to classes"""
 
-    class_names = { clazz.__name__: clazz for clazz in classes }
+    class_names = {clazz.__name__: clazz for clazz in classes}
 
     def object_hook(data):
         if '_type' in data:
@@ -49,17 +49,7 @@ def get_object_hook(classes):
 
     return object_hook
 
-def get_json_encoder(classes):
-    """
-        Get custom json encoder that can encode provided classes.
 
-        @param classes list<PYTHON_CLASS>
-    """
+def get_json_encoder(classes: List[Type[object]]) -> Type[json.JSONEncoder]:
+    """Get custom json encoder that can encode provided classes"""
     return type('CustomJSONEncoder', (DynamicJSONEncoder,), dict(classes=classes))
-
-def json_loads(data, classes):
-    """
-        Short hand for JSON loads
-    """
-    # warnings.warn('Stop using this short hand method, it has performance issue')
-    return json.loads(data, object_hook=get_object_hook(classes))

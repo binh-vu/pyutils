@@ -6,3 +6,5 @@ dist/
 !.gitignore
 rand_performance_analysis.py
 utils.egg-info/
+.idea/
+cover/
