@@ -5,3 +5,5 @@ simplejson
 pycorenlp
 ujson
 numpy
+pymongo
+coverage

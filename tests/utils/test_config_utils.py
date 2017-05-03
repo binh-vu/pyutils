@@ -28,6 +28,10 @@ data:
     ok_(config.data.float_str == '6.1')
     ok_(config.data.float_str.as_float() == 6.1)
     ok_(config.data.int_str.as_int() == 6)
+    ok_(config.data['abc'] == 'ahe')
+    ok_(config.get_conf('data.abc') == 'ahe')
+    config.set_conf('data.test.abc', 5)
+    ok_(config.data.test.abc == 5)
 
     os.remove(config_file)
 
@@ -54,5 +58,11 @@ config_dir: {config_dir}
 
     config = load_config(config_file)
     ok_(config.config_dir == config_dir)
-    ok_(not os.path.exists(config_dir))
-    config.config_dir.ensure_dir_existence
+    ok_(not os.path.exists(config_dir), 'Dir must not exist')
+
+    config.config_dir.ensure_dir_existence()
+    ok_(os.path.exists(config_dir), 'Dir must exist')
+
+    ok_(not os.path.exists(config_dir + '-1'), 'Dir must not exist')
+    config.config_dir.backup_dir()
+    ok_(os.path.exists(config_dir + '-1'), 'Dir must exist')

@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 from collections import OrderedDict
-from typing import Dict, Any, Iterable
+from typing import Dict, Any, Iterable, TypeVar, Union
 
 import yaml
 
@@ -55,13 +55,21 @@ class StringConf(str):
         self.ensure_dir_existence()
 
 
+RawPrimitiveType = TypeVar('RawPrimitiveType', int, float, str)
+PrimitiveType = TypeVar('PrimitiveType', int, float, StringConf)
+
+
 class Configuration(object):
-    def __init__(self, dict_object: Dict[str, str], workdir: str = '') -> None:
+
+    def __init__(self, dict_object: Dict[str, Union[RawPrimitiveType, Dict]], workdir: str = '') -> None:
+
         # if __workdir__ is defined in dict_object, it overwrites the bounded workdir
         if '__workdir__' in dict_object:
             workdir = os.path.join(workdir, dict_object.pop('__workdir__'))
 
+        # type: str
         self.__workdir = workdir
+        # type: OrderedDict[str, Union[PrimitiveType, Configuration]]
         self.__conf = OrderedDict()
 
         for key, value in dict_object.items():
@@ -74,9 +82,7 @@ class Configuration(object):
             else:
                 self.__conf[key] = value
 
-            self.__dict__[key] = self.__conf[key]
-
-    def set_conf(self, key: str, value: Any) -> 'Configuration':
+    def set_conf(self, key: str, value: RawPrimitiveType) -> 'Configuration':
         if type(value) is dict:
             value = Configuration(value, self.__workdir)
         elif type(value) is str:
@@ -88,16 +94,14 @@ class Configuration(object):
             assert type(conf) is Configuration, 'Cannot assign property to primitive object'
             if p_key not in conf.__conf:
                 conf.__conf[p_key] = Configuration(OrderedDict(), self.__workdir)
-                conf.__dict__[p_key] = conf.__conf[p_key]
 
             conf = conf.__conf[p_key]
 
         assert type(conf) is Configuration, 'Cannot assign property to primitive object'
         conf.__conf[p_keys[-1]] = value
-        conf.__dict__[p_keys[-1]] = value
         return self
 
-    def get_conf(self, key: str) -> Any:
+    def get_conf(self, key: str) -> Union[PrimitiveType, 'Configuration']:
         """Get configuration provided by the dot string"""
         conf = self
         props = key.split('.')
@@ -105,16 +109,16 @@ class Configuration(object):
             conf = conf.__conf[prop]
         return conf.__conf[props[-1]]
 
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> Union[PrimitiveType, 'Configuration']:
         return self.__conf[name]
 
-    def __getitem__(self, name: str) -> Any:
+    def __getitem__(self, name: str) -> Union[PrimitiveType, 'Configuration']:
         return self.__conf[name]
 
     def __iter__(self) -> Iterable[str]:
-        return self.__conf.iterkeys()
+        return self.__conf.keys()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Union[RawPrimitiveType, Dict]]:
         dict_object = {
             '__workdir__': self.__workdir
         }
