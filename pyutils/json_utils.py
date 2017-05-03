@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from typing import List, Type, Any, Callable
+from typing import List, Type, Any, Callable, TypeVar
 
 import simplejson as json
 from bson.objectid import ObjectId
@@ -34,7 +34,7 @@ class DynamicJSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def get_object_hook(classes: List[Type[object]]) -> Callable[[Any], Any]:
+def get_object_hook(classes: List[type]) -> Callable[[Any], Any]:
     """Get object hook function that can convert dict back to classes"""
 
     class_names = {clazz.__name__: clazz for clazz in classes}
@@ -50,6 +50,6 @@ def get_object_hook(classes: List[Type[object]]) -> Callable[[Any], Any]:
     return object_hook
 
 
-def get_json_encoder(classes: List[Type[object]]) -> Type[json.JSONEncoder]:
+def get_json_encoder(classes: List[type]) -> type:
     """Get custom json encoder that can encode provided classes"""
     return type('CustomJSONEncoder', (DynamicJSONEncoder,), dict(classes=classes))
