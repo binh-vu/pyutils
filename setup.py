@@ -5,7 +5,7 @@ from distutils.core import setup
 from setuptools import find_packages
 
 setup(
-    name='utils',
+    name='pyutils',
     version='1.0.13',
     description='Utilities for python',
     author='Binh Vu',

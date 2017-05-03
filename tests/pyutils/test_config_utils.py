@@ -4,7 +4,7 @@ import os
 import time
 
 from nose.tools import ok_
-from utils.config_utils import load_config, write_config
+from pyutils.config_utils import load_config, write_config
 
 
 def test_io():

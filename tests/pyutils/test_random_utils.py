@@ -5,7 +5,7 @@ import numpy as np
 import unittest
 from nose.tools import *
 
-from utils import random
+from pyutils import random
 
 
 def test_choice_noreplace_with_prob():

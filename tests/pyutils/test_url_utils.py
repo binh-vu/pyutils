@@ -1,11 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from typing import List, Tuple, Dict, Union, Optional
-
 from nose.tools import *
 
-from utils.url_utils import parse
+from pyutils.url_utils import parse
 
 
 def test_parse():

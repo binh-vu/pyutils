@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-	Contains utils for csv
+	Contains pyutils for csv
 """
 import StringIO, csv
 

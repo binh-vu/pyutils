@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from utils import search
+from pyutils import search
 from nose.tools import *
 
 

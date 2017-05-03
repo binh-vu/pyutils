@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from utils.string_utils import *
+from pyutils.string_utils import *
 from nose.tools import *
 
 

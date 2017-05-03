@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from typing import List, Dict, Callable, Any
 
-from utils.range_utils import Range, build_interval_tree
+from pyutils.range_utils import Range, build_interval_tree
 
 
 def is_capitalize(s): return s[0] == s[0].upper()
