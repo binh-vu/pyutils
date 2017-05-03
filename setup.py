@@ -11,5 +11,5 @@ setup(
     author='Binh Vu',
     author_email='binhlvu@gmail.com',
     url='https://github.com/binh-vu/pyutils',
-    packages=find_packages(exclude=['tests.*', 'tests'], install_requires=['numpy'])
+    packages=find_packages(exclude=['tests.*', 'tests'])
 )
