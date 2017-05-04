@@ -68,11 +68,11 @@ config_dir: {config_dir}
     ok_(config.config_dir == config_dir)
     ok_(not os.path.exists(config_dir), 'Dir must not exist')
 
-    config.config_dir.ensure_dir_existence()
+    config.config_dir.ensure_path_existence()
     ok_(os.path.exists(config_dir), 'Dir must exist')
 
     ok_(not os.path.exists(config_dir + '-1'), 'Dir must not exist')
-    config.config_dir.backup_dir()
+    config.config_dir.backup_path()
     ok_(os.path.exists(config_dir + '-1'), 'Dir must exist')
 
 

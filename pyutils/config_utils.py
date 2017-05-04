@@ -26,7 +26,7 @@ class StringConf(str):
     def as_path(self) -> str:
         return os.path.abspath(os.path.join(self.__workdir, self))
 
-    def ensure_dir_existence(self):
+    def ensure_path_existence(self):
         path = self.as_path()
         _, ext = os.path.splitext(path)
 
@@ -39,7 +39,7 @@ class StringConf(str):
             if not os.path.exists(path):
                 os.makedirs(path)
 
-    def backup_dir(self):
+    def backup_path(self):
         path = self.as_path()
         dirname = os.path.dirname(path)
         basename = os.path.basename(path)
@@ -61,7 +61,7 @@ class StringConf(str):
             shutil.move(path, os.path.join(dirname, basename + '-' + str(most_recent_version + 1)))
 
         # create new folder to work with
-        self.ensure_dir_existence()
+        self.ensure_path_existence()
 
 
 RawPrimitiveType = TypeVar('RawPrimitiveType', int, float, str)
