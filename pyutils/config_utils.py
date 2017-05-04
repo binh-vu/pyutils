@@ -70,7 +70,7 @@ PrimitiveType = TypeVar('PrimitiveType', int, float, StringConf)
 
 class Configuration(object):
 
-    def __init__(self, dict_object: Dict[str, Union[RawPrimitiveType, Dict]], workdir: str = '') -> None:
+    def __init__(self, dict_object: Dict[str, Union[RawPrimitiveType, Dict]], workdir: str = '', init: bool=True) -> None:
 
         # if __workdir__ is defined in dict_object, it overwrites the bounded workdir
         if '__workdir__' in dict_object:
@@ -83,13 +83,30 @@ class Configuration(object):
 
         for key, value in dict_object.items():
             if type(value) is dict or isinstance(value, OrderedDict):
-                self.__conf[key] = Configuration(value, workdir)
+                self.__conf[key] = Configuration(value, workdir, False)
             elif isinstance(value, str):
                 self.__conf[key] = StringConf(value, workdir)
             elif type(value) is list and len(value) > 0 and isinstance(value[0], str):
                 self.__conf[key] = map(lambda x: StringConf(x, workdir), value)
             else:
                 self.__conf[key] = value
+
+        if init:
+            self.defer_init(self, self)
+
+    def defer_init(self, global_conf: 'Configuration', config: 'Configuration'):
+        """Initialize value in config"""
+        for prop in list(config.__conf.keys()):
+            value = config.__conf[prop]
+            if isinstance(value, StringConf):
+                if value.startswith('@@'):
+                    # value is a reference to other value as path
+                    value = global_conf.get_conf(value[2:]).as_path()
+                elif value.startswith('@'):
+                    value = global_conf.get_conf(value[1:])
+                config.__conf[prop] = value
+            elif isinstance(value, Configuration):
+                self.defer_init(global_conf, value)
 
     def set_conf(self, key: str, value: RawPrimitiveType) -> 'Configuration':
         if type(value) is dict:
@@ -125,7 +142,7 @@ class Configuration(object):
         return self.__conf[name]
 
     def __iter__(self) -> Iterable[str]:
-        return self.__conf.keys()
+        return iter(self.__conf.keys())
 
     def to_dict(self) -> Dict[str, Union[RawPrimitiveType, Dict]]:
         dict_object = {

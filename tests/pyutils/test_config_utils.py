@@ -3,13 +3,14 @@
 import os
 import time
 
-from nose.tools import ok_
+from nose.tools import ok_, eq_
+from bson.objectid import ObjectId
 from pyutils.config_utils import load_config, write_config
 
 
 def test_io():
-    time_id = time.time()
-    config_file = f'/tmp/config_file_{time_id}.txt'
+    file_id = str(ObjectId())
+    config_file = f'/tmp/config_file_{file_id}.txt'
     ok_(not os.path.exists(config_file))
 
     # test load config from file
@@ -41,9 +42,9 @@ data:
 
 
 def test_dir_ops():
-    time_id = time.time()
-    config_file = f'/tmp/config_file_{time_id}.txt'
-    config_dir = f'/tmp/config_dir_{time_id}'
+    file_id = str(ObjectId())
+    config_file = f'/tmp/config_file_{file_id}.txt'
+    config_dir = f'/tmp/config_dir_{file_id}'
     ok_(not os.path.exists(config_file))
 
     with open(config_file, 'w') as f:
@@ -66,3 +67,28 @@ config_dir: {config_dir}
     ok_(not os.path.exists(config_dir + '-1'), 'Dir must not exist')
     config.config_dir.backup_dir()
     ok_(os.path.exists(config_dir + '-1'), 'Dir must exist')
+
+
+def test_ref_ops():
+    file_id = str(ObjectId())
+    config_file = f'/tmp/config_file_{file_id}.txt'
+    ok_(not os.path.exists(config_file))
+
+    with open(config_file, 'w') as f:
+        f.write(f'''
+logs:
+    __workdir__: /home/peter
+    expense: expense_sheets.csv
+data:
+    __workdir__: '/data'
+    gold:
+        monthly_expense: '@logs.expense'
+        monthly_expense_path: '@@logs.expense'
+''')
+
+    config = load_config(config_file)
+    eq_(config.logs.expense, 'expense_sheets.csv')
+    eq_(config.logs.expense.as_path(), '/home/peter/expense_sheets.csv')
+    eq_(config.data.gold.monthly_expense, 'expense_sheets.csv')
+    eq_(config.data.gold.monthly_expense.as_path(), '/home/peter/expense_sheets.csv')
+    eq_(config.data.gold.monthly_expense_path, '/home/peter/expense_sheets.csv')
