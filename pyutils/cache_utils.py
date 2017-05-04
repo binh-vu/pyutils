@@ -30,29 +30,39 @@ class FileCache(object):
         self.fpath = fpath
         self.data = {}  # type: Dict[str, Any]
         self.fcursor = None  # type: Any
+        self.within_context = False
 
     def load_data(self):
-        # Load data when the file's existed
+        # Load data if the file's existed
+        assert not self.within_context, 'Must load the data before caching'
         if os.path.exists(self.fpath):
             with open(self.fpath, 'r') as f:
                 for l in f:
                     k, v = ujson.loads(l)
                     self.data[k] = v
 
-    def open(self):
+    def __enter__(self):
         self.fcursor = open(self.fpath, mode='a')
+        self.within_context = True
 
-    def close(self):
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.within_context = False
         self.fcursor.close()
 
     def invalidate(self):
-        if self.fcursor is not None:
-            self.close()
-        self.fcursor = open(self.fpath, mode='w')
+        if self.within_context:
+            assert self.fcursor is not None
+            # attempt to close the file and open new one
+            self.fcursor.close()
+            self.fcursor = open(self.fpath, mode='w')
+        else:
+            # if not in the context, mean the file is not opened
+            assert self.fcursor is None
         self.data = {}
 
-    def exec_func(self, func, *args):
-        # type: (Callable[[*Any], Any], *Any) -> Any
+    def exec_func(self, func: Callable[[Any], Any], *args: Any) -> Any:
+        assert self.within_context
+
         key = '%s:%s' % (func.__name__, ujson.dumps(args))
         if key not in self.data:
             self.data[key] = func(*args)
@@ -60,9 +70,9 @@ class FileCache(object):
 
         return self.data[key]
 
-    def write_change(self, key):
-        # type: (str) -> None
+    def write_change(self, key: str):
         self.fcursor.write(ujson.dumps((key, self.data[key])))
+        self.fcursor.write('\n')
 
 
 class FileCacheDelegator(object):
@@ -75,11 +85,11 @@ class FileCacheDelegator(object):
     def load_data(self):
         self.file_cache.load_data()
 
-    def open(self):
-        self.file_cache.open()
+    def __enter__(self):
+        self.file_cache.__enter__()
 
-    def close(self):
-        self.file_cache.close()
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.file_cache.__exit__(exc_type, exc_val, exc_tb)
 
     def invalidate(self):
         self.file_cache.invalidate()
