@@ -27,8 +27,15 @@ class StringConf(str):
         return os.path.abspath(os.path.join(self.__workdir, self))
 
     def ensure_dir_existence(self):
-        if not os.path.exists(self.as_path()):
-            os.makedirs(self.as_path())
+        path = self.as_path()
+        _, ext = os.path.splitext(path)
+
+        if ext != '':
+            # this is a file
+            dirname = os.path.dirname(path)
+            os.makedirs(dirname)
+        else:
+            os.makedirs(path)
 
     def backup_dir(self):
         path = self.as_path()
