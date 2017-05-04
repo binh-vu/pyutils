@@ -33,9 +33,11 @@ class StringConf(str):
         if ext != '':
             # this is a file
             dirname = os.path.dirname(path)
-            os.makedirs(dirname)
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
         else:
-            os.makedirs(path)
+            if not os.path.exists(path):
+                os.makedirs(path)
 
     def backup_dir(self):
         path = self.as_path()
