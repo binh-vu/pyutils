@@ -71,18 +71,19 @@ PrimitiveType = TypeVar('PrimitiveType', int, float, StringConf)
 class Configuration(object):
 
     def __init__(self, dict_object: Dict[str, Union[RawPrimitiveType, Dict]], workdir: str = '', init: bool=True) -> None:
-
         # if __workdir__ is defined in dict_object, it overwrites the bounded workdir
         if '__workdir__' in dict_object:
-            workdir = os.path.join(workdir, dict_object.pop('__workdir__'))
+            workdir = os.path.join(workdir, dict_object['__workdir__'])
 
-        # type: str
-        self.__workdir = workdir
-        # type: OrderedDict[str, Union[PrimitiveType, Configuration]]
-        self.__conf = OrderedDict()
+        self.__dict_object = dict_object  # Dict
+        self.__workdir = workdir  # type: str
+        self.__conf = OrderedDict()  # type: OrderedDict[str, Union[PrimitiveType, Configuration]]
 
         for key, value in dict_object.items():
-            if type(value) is dict or isinstance(value, OrderedDict):
+            if key in {'__workdir__'}:
+                continue
+
+            if isinstance(value, (dict, OrderedDict)):
                 self.__conf[key] = Configuration(value, workdir, False)
             elif isinstance(value, str):
                 self.__conf[key] = StringConf(value, workdir)
@@ -144,15 +145,21 @@ class Configuration(object):
     def __iter__(self) -> Iterable[str]:
         return iter(self.__conf.keys())
 
-    def to_dict(self) -> Dict[str, Union[RawPrimitiveType, Dict]]:
-        dict_object = {
-            '__workdir__': self.__workdir
-        }
+    def to_dict(self, including_workdir=False) -> Dict[str, Union[RawPrimitiveType, Dict]]:
+        dict_object = {}
+        if including_workdir:
+            dict_object['__workdir__'] = self.__workdir
+
         for k, v in self.__conf.items():
             if isinstance(v, Configuration):
                 v = v.to_dict()
+            elif isinstance(v, StringConf):
+                v = str(v)
             dict_object[k] = v
         return dict_object
+
+    def to_raw_dict(self):
+        return self.__dict_object
 
 
 def load_config(fpath: str) -> Configuration:
@@ -179,5 +186,17 @@ def load_config(fpath: str) -> Configuration:
 
 
 def write_config(config: Configuration, fpath: str) -> None:
+    def ordered_dump(data, stream=None, Dumper=yaml.Dumper, **kwds):
+        class OrderedDumper(Dumper):
+            pass
+
+        def _dict_representer(dumper, data):
+            return dumper.represent_mapping(
+                yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+                data.items())
+
+        OrderedDumper.add_representer(OrderedDict, _dict_representer)
+        return yaml.dump(data, stream, OrderedDumper, **kwds)
+
     with open(fpath, 'w') as f:
-        yaml.dump(config.to_dict(), f, default_flow_style=False)
+        ordered_dump(config.to_raw_dict(), f, default_flow_style=False, indent=4)

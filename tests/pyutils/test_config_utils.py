@@ -15,13 +15,17 @@ def test_io():
 
     # test load config from file
     with open(config_file, 'w') as f:
-        f.write('''
-data:
+        content = f'''data:
     abc: ahe
     float: 6.1
     float_str: '6.1'
     int_str: '6'
-''')
+dir:
+    __workdir__: /home/ubuntu
+    download: Downloads
+'''
+        f.write(content)
+
     config = load_config(config_file)
     ok_(config.data.abc == 'ahe')
     ok_(config.data.abc.as_path() == '/tmp/ahe')
@@ -37,8 +41,11 @@ data:
     os.remove(config_file)
 
     # test save config to file
-    write_config(config, config_file)
-    ok_(os.path.exists(config_file))
+    ok_(not os.path.exists(config_file + '.backup'))
+    write_config(config, config_file + '.backup')
+    ok_(os.path.exists(config_file + '.backup'))
+    with open(config_file + '.backup', 'r') as f:
+        eq_(content, f.read())
 
 
 def test_dir_ops():
@@ -92,3 +99,29 @@ data:
     eq_(config.data.gold.monthly_expense, 'expense_sheets.csv')
     eq_(config.data.gold.monthly_expense.as_path(), '/home/peter/expense_sheets.csv')
     eq_(config.data.gold.monthly_expense_path, '/home/peter/expense_sheets.csv')
+
+
+def test_to_dict_ops():
+    file_id = str(ObjectId())
+    config_file = f'/tmp/config_file_{file_id}.txt'
+    ok_(not os.path.exists(config_file))
+
+    with open(config_file, 'w') as f:
+        f.write(f'''
+logs:
+    __workdir__: /home/peter
+    expense: expense_sheets.csv
+data:
+    __workdir__: '/data'
+    gold:
+        monthly_expense: '@logs.expense'
+        monthly_expense_path: '@@logs.expense'
+''')
+
+    config = load_config(config_file)
+    eq_(config.data.to_dict(), {
+        'gold': {
+            'monthly_expense': 'expense_sheets.csv',
+            'monthly_expense_path': '/home/peter/expense_sheets.csv',
+        }
+    })
