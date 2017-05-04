@@ -1,5 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+import re
+from html.parser import HTMLParser
 from typing import List, Dict, Callable, Any
 
 from pyutils.range_utils import Range, build_interval_tree
@@ -9,18 +11,91 @@ def is_capitalize(s): return s[0] == s[0].upper()
 
 
 class Annotation(Range):
-    def __init__(self, start, end):
+    def __init__(self, start: int, end: int):
         super(Annotation, self).__init__(start, end)
 
-    def get_anchor(self, string):
+    def get_anchor(self, string: str) -> str:
         return string[self.start:self.end]
 
-    def molding(self, string):
+    def molding(self, string: str) -> str:
         return string
 
 
 class PolicyViolation(Exception):
     pass
+
+
+class MLStripper(HTMLParser):
+
+    def __init__(self):
+        super().__init__()
+        self.reset()
+        self.fed = []
+
+    def handle_data(self, d):
+        self.fed.append(d)
+
+    def get_data(self):
+        return ''.join(self.fed)
+
+    def error(self, message):
+        raise Exception(message)
+
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()
+
+
+def find_all(substring, string):
+    """
+        Find all occurrences of substring in string
+    """
+    tmp = string
+    offset = 0
+    occurrences = []
+    while tmp.find(substring) != -1:
+        occurrences.append(tmp.find(substring) + offset)
+        offset += tmp.find(substring) + len(substring)
+        tmp = tmp[tmp.find(substring) + len(substring):]
+
+    return occurrences
+
+
+def match_sequence(seq_a, seq_b, start_index, case_insensitive=True):
+    """
+        Test if seqA is starts with seqB
+    """
+    if len(seq_a) - start_index < len(seq_b):
+        return False
+
+    if case_insensitive:
+        for i in range(len(seq_b)):
+            if seq_a[i + start_index].lower() != seq_b[i].lower():
+                return False
+    else:
+        for i in range(len(seq_b)):
+            if seq_a[i + start_index] != seq_b[i]:
+                return False
+
+    return True
+
+
+def get_match_positions(query_tokens, tokens):
+    matches = []
+
+    for i in range(len(tokens)):
+        if match_sequence(tokens, query_tokens, i):
+            matches.append(i)
+
+    return matches
+
+
+def get_hashtag(text):
+    tags = re.findall('(#[a-zA-Z_]+)', text)
+    return set(tags)
+
 
 
 def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str, Any]) -> str:

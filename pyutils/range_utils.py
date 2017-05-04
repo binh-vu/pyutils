@@ -5,20 +5,20 @@ import copy
 
 class Range(object):
 
-    def __init__(self, start, end):
+    def __init__(self, start: int, end: int):
         self.start = start
         self.end = end
 
-    def get_id(self):
+    def get_id(self) -> str:
         return '%s-%s' % (self.start, self.end)
         
-    def size(self):
+    def size(self) -> int:
         return self.end - self.start
 
-    def merge(self, another):
+    def merge(self, another: 'Range') -> 'Range':
         return Range(min(self.start, another.start), max(self.end, another.end))
 
-    def shift(self, offset):
+    def shift(self, offset: int) -> 'Range':
         obj = copy.copy(self)
         obj.start += offset
         obj.end += offset
