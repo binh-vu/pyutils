@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from typing import List, Type, Any, Callable, TypeVar
+from typing import List, Any, Callable
 
 import simplejson as json
 from bson.objectid import ObjectId
@@ -24,6 +24,7 @@ class DynamicJSONEncoder(json.JSONEncoder):
         if isinstance(obj, ObjectId):
             return str(obj)
 
+        # noinspection PyUnresolvedReferences
         for clazz in self.classes:
             if isinstance(obj, clazz):
                 data = obj.__dict__

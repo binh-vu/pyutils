@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import os
-import time
 
-from nose.tools import ok_, eq_
 from bson.objectid import ObjectId
+from nose.tools import ok_, eq_
+
 from pyutils.config_utils import load_config, write_config
 
 

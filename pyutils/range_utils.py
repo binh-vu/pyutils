@@ -3,15 +3,15 @@
 
 import copy
 
-class Range(object):
 
+class Range(object):
     def __init__(self, start: int, end: int):
         self.start = start
         self.end = end
 
     def get_id(self) -> str:
         return '%s-%s' % (self.start, self.end)
-        
+
     def size(self) -> int:
         return self.end - self.start
 
@@ -39,6 +39,7 @@ class Range(object):
 
     def is_cross(self, another):
         return self.is_overlap(another) and not self.is_contain(another)
+
 
 def build_interval_tree(ranges):
     def tree_insert(node, range):

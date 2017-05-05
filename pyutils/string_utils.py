@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 import re
 from html.parser import HTMLParser
-from typing import List, Dict, Callable, Any
+from typing import List, Dict, Callable, Any, Set
 
 from pyutils.range_utils import Range, build_interval_tree
 
 
-def is_capitalize(s): return s[0] == s[0].upper()
+def is_capitalize(s: str) -> bool:
+    return s[0] == s[0].upper()
 
 
 class Annotation(Range):
@@ -26,7 +27,6 @@ class PolicyViolation(Exception):
 
 
 class MLStripper(HTMLParser):
-
     def __init__(self):
         super().__init__()
         self.reset()
@@ -42,13 +42,13 @@ class MLStripper(HTMLParser):
         raise Exception(message)
 
 
-def strip_tags(html):
+def strip_tags(html: str) -> str:
     s = MLStripper()
     s.feed(html)
     return s.get_data()
 
 
-def find_all(substring, string):
+def find_all(substring: str, string: str) -> List[int]:
     """
         Find all occurrences of substring in string
     """
@@ -63,10 +63,8 @@ def find_all(substring, string):
     return occurrences
 
 
-def match_sequence(seq_a, seq_b, start_index, case_insensitive=True):
-    """
-        Test if seqA is starts with seqB
-    """
+def strseq_startswith(seq_a: List[str], seq_b: List[str], start_index: int, case_insensitive=True) -> bool:
+    """Test if seqA is starts with seqB"""
     if len(seq_a) - start_index < len(seq_b):
         return False
 
@@ -82,20 +80,19 @@ def match_sequence(seq_a, seq_b, start_index, case_insensitive=True):
     return True
 
 
-def get_match_positions(query_tokens, tokens):
+def get_match_positions(query_tokens: List[str], tokens: List[str]) -> List[int]:
     matches = []
 
     for i in range(len(tokens)):
-        if match_sequence(tokens, query_tokens, i):
+        if strseq_startswith(tokens, query_tokens, i):
             matches.append(i)
 
     return matches
 
 
-def get_hashtag(text):
+def get_hashtag(text: str) -> Set[str]:
     tags = re.findall('(#[a-zA-Z_]+)', text)
     return set(tags)
-
 
 
 def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str, Any]) -> str:
@@ -114,7 +111,7 @@ def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str
         :return: annotated string
     """
 
-    def remove_conflicted_range(node, judge: Callable[[Annotation], Annotation]) -> bool:
+    def remove_conflicted_range(node, judge: Callable[[Annotation, Annotation], Annotation]) -> bool:
         """
             Remove conflicted children in this node, and return a bool value indicate that
             there is any conflict has been solved. The children of the node is 
@@ -190,7 +187,7 @@ def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str
     default_policy.update(policy)
     assert len(default_policy) == 6
 
-    # grouping annotations so that the overlaped annotations belong to same group
+    # grouping annotations so that the overlapped annotations belong to same group
     # each group is sorted by the start position
     annotations.sort(key=lambda a: a.start)
     g_annotations = [[annotations[0]]]
@@ -238,6 +235,7 @@ def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str
         annotation_tree['range'] = Annotation(annotation_tree['range'].start, annotation_tree['range'].end)
 
         if len(g_annotation) > 1:
+            # noinspection PyTypeChecker
             is_conflict = remove_conflicted_range(annotation_tree, default_policy['JUDGE_FUNCTION'])
             if not default_policy['IGNORE_CROSSED_ANNOTATION'] and is_conflict:
                 raise PolicyViolation('Cannot render crossed annotations')

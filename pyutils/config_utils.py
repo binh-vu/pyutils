@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 from collections import OrderedDict
-from typing import Dict, Any, Iterable, TypeVar, Union
+from typing import Dict, Iterable, TypeVar, Union
 
 import yaml
 
@@ -179,6 +179,7 @@ def load_config(fpath: str) -> Configuration:
                 construct_mapping)
             return yaml.load(stream, OrderedLoader)
 
+        # noinspection PyTypeChecker
         return ordered_load(file_stream, yaml.SafeLoader)
 
     with open(fpath, 'r') as f:
@@ -186,7 +187,7 @@ def load_config(fpath: str) -> Configuration:
 
 
 def write_config(config: Configuration, fpath: str) -> None:
-    def ordered_dump(data, stream=None, Dumper=yaml.Dumper, **kwds):
+    def ordered_dump(data, stream=None, Dumper=yaml.Dumper, **kwargs):
         class OrderedDumper(Dumper):
             pass
 
@@ -196,7 +197,7 @@ def write_config(config: Configuration, fpath: str) -> None:
                 data.items())
 
         OrderedDumper.add_representer(OrderedDict, _dict_representer)
-        return yaml.dump(data, stream, OrderedDumper, **kwds)
+        return yaml.dump(data, stream, OrderedDumper, **kwargs)
 
     with open(fpath, 'w') as f:
         ordered_dump(config.to_raw_dict(), f, default_flow_style=False, indent=4)

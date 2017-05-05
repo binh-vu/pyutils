@@ -3,9 +3,8 @@
 
 import hashlib
 
-def md5(string):
-    if type(string) is unicode:
-        string = string.encode('utf-8')
+
+def md5(string: str) -> str:
     algo = hashlib.md5()
     algo.update(string)
 

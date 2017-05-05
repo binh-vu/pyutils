@@ -2,22 +2,28 @@
 # -*- coding: utf-8 -*-
 
 import bisect
+from typing import List, TypeVar, Optional, Callable, Generic
+from typing import Tuple
 
 
-class KeyViewArray(object):
+T = TypeVar('T')
+V = TypeVar('V')
 
-    def __init__(self, array, key):
+
+class KeyViewArray(Generic[T, V]):
+
+    def __init__(self, array: List[T], key: Callable[[T], V]):
         self.array = array
         self.key = key
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.array)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int) -> V:
         return self.key(self.array[item])
 
 
-def binary_search(array, value, key=None):
+def binary_search(array: List[T], value: V, key: Callable[[T], V]=None) -> T:
     """
         Do the binary search to get the index of value in the ascending sorted array.
 
@@ -44,7 +50,7 @@ def binary_search(array, value, key=None):
     return bisect.bisect_left(KeyViewArray(array, key), value)
 
 
-def range_overlap_search(range_array, range_value, key=None):
+def range_overlap_search(range_array: List[T], range_value: Tuple[float, float], key: Optional[Callable[[T], Tuple[float, float]]] = None) -> List[T]:
     """
         Search in range_array to find any range overlap with range_value. range_array is sorted ascending s.t: for any number 0 <= i < j <= len(range_array)
         range_array[i].start <= range_array[i].end <= range_array[j].start <= range_array[j].end.
@@ -57,24 +63,28 @@ def range_overlap_search(range_array, range_value, key=None):
 
         The result is: range_array[b_i:a_i]
 
-        :param range_array: list<(start, end)> if key is None, otherwise it is list of element, whose range (start, end) could be retrieve using key function
-        :param range_value: (start, end)
+        :param range_array: if key is None, otherwise it is list of element, whose range (start, end) could be retrieve using key function
+        :param range_value:
         :param key:
         :return:
     """
+    def identical(x: T) -> T:
+        return x
+
     if len(range_array) == 0:
         return []
 
     m, n = range_value
 
     if key is None:
-        key = lambda x: x
+        key = identical
 
+    # noinspection PyTypeChecker
     a_i = binary_search(range_array, n, key=lambda x: key(x)[0])
+    # noinspection PyTypeChecker
     b_i = binary_search(range_array, m, key=lambda x: key(x)[1])
 
     while b_i < len(range_array) and key(range_array[b_i])[1] == m:
         b_i += 1
 
     return range_array[b_i:a_i]
-

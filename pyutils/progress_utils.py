@@ -26,7 +26,7 @@ class Progress(object):
     def finish_one(self):
         # since from the Progress constructed to the first task finish is unknown,
         # so finish time can only be estimate correctly from second task.
-        if self.current >= 1: # when self.current is 1, it's already second task
+        if self.current >= 1:  # when self.current is 1, it's already second task
             one_task_time = float(time.time() - self.last_time)
             if self.current == 1:
                 self.average_task_time = one_task_time
@@ -112,15 +112,3 @@ class EmpiricalExpectation(object):
 
     def get_raw_expectation(self):
         return self.total / self.count
-
-
-if __name__ == '__main__':
-    import random
-
-    tasks = range(20)
-    progress = Progress(len(tasks))
-
-    for task in tasks:
-        print(progress.finish_one())
-        # time.sleep(random.random())
-        time.sleep(1)

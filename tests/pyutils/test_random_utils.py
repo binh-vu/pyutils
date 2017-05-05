@@ -1,8 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import numpy as np
-import unittest
+import numpy as np, unittest
 from nose.tools import *
 
 from pyutils import random

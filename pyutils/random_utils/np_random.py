@@ -48,7 +48,7 @@ class RandomState(object):
         if p is not None:
             atol = np.sqrt(np.finfo(np.float64).eps)
             if isinstance(p, np.ndarray):
-                if np.issubdtype(p.dtype, np.floating):
+                if np.issubdtype(p.dtype, np.float):
                     atol = max(atol, np.sqrt(np.finfo(p.dtype).eps))
 
             p = np.asarray(p, dtype=np.double)
@@ -57,6 +57,7 @@ class RandomState(object):
                 raise ValueError("p must be 1-dimensional")
             if p.size != pop_size:
                 raise ValueError("a and p must have same size")
+            # noinspection PyArgumentList
             if np.logical_or.reduce(p < 0):
                 raise ValueError("probabilities are not non-negative")
             if abs(np.sum(p) - 1.) > atol:
@@ -120,6 +121,7 @@ class RandomState(object):
                 found = np.zeros(shape, dtype=np.int)
                 flat_found = found.ravel()
                 while n_uniq < size:
+                    # noinspection PyArgumentList
                     x = self.random_state.rand(size - n_uniq)
                     if n_uniq > 0:
                         self.choice_p[flat_found[0:n_uniq]] = 0
@@ -139,9 +141,9 @@ class RandomState(object):
                 idx = found
             else:
                 raise Exception("not implemented yet")
-                idx = self.random_state.permutation(self.choice_a_size)[:size]
-                if shape is not None:
-                    idx.shape = shape
+                # idx = self.random_state.permutation(self.choice_a_size)[:size]
+                # if shape is not None:
+                #     idx.shape = shape
 
         if shape is None and isinstance(idx, np.ndarray):
             # In most cases a scalar will have been made an array

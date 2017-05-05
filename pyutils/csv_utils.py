@@ -2,13 +2,15 @@
 # -*- coding: utf-8 -*-
 
 """
-	Contains pyutils for csv
+Contains pyutils for csv
 """
-import StringIO, csv
+import csv
+from io import StringIO
+
 
 def dump_csv(array, delimiter=','):
-    f = StringIO.StringIO()
+    f = StringIO()
     writer = csv.writer(f, delimiter=delimiter, quoting=csv.QUOTE_MINIMAL)
-    writer.writerow([unicode(s).encode('utf-8') for s in array])
+    writer.writerow(array)
 
     return f.getvalue()[:-2]
