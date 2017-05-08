@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import copy
+from typing import List, TypeVar
 
 
 class Range(object):
@@ -41,17 +42,24 @@ class Range(object):
         return self.is_overlap(another) and not self.is_contain(another)
 
 
-def build_interval_tree(ranges):
-    def tree_insert(node, range):
-        for child in node['children']:
-            if child['range'].is_contain(range):
+class IntervalTreeNode(object):
+
+    def __init__(self, range: Range, children: List['IntervalTreeNode']):
+        self.range = range
+        self.children = children
+
+
+def build_interval_tree(ranges: List[Range]) -> IntervalTreeNode:
+    def tree_insert(node: IntervalTreeNode, range: Range):
+        for child in node.children:
+            if child.range.is_contain(range):
                 return tree_insert(child, range)
 
-        node['children'].append({
-            'range': range,
-            'children': []
-        })
-        node['children'].sort(key=lambda r: r['range'].start)
+        node.children.append(IntervalTreeNode(
+            range=range,
+            children=[]
+        ))
+        node.children.sort(key=lambda r: r.range.start)
         return
 
     """
@@ -60,17 +68,24 @@ def build_interval_tree(ranges):
         
         Nodes of the returned tree are ranges, except the root of the tree is constructed by the left and right most interval.
 
-        @param ranges list<Range>
-        @return { 'range': Range, children: list<Range> }
+        Examples:
+            List of ranges: (1, 2), (4, 5), (1, 7), (8, 9) will result as the following tree:
+                    (1, 9)
+                /          \
+              (1, 7)      (8, 9)
+            |       |
+           (1,2) (4, 5)
+           List of ranges: (1, 3), (2, 3), (2, 4) will result the following tree:
+                    (1, 4)
+                /           \
+            (1, 3)         (2, 4)
+                |
+            (2, 3)
     """
     left_most_value = min(ranges, key=lambda a: a.start).start
     right_most_value = max(ranges, key=lambda a: a.end).end
 
-    root = {
-        'range': Range(left_most_value, right_most_value),
-        'is_annotation': False,
-        'children': []
-    }
+    root = IntervalTreeNode(Range(left_most_value, right_most_value), [])
 
     # sort ranges by its length, descending order, and start inserting to the tree until insert all ranges
     ranges = sorted(ranges, key=lambda a: a.end - a.start, reverse=True)
@@ -78,3 +93,30 @@ def build_interval_tree(ranges):
         tree_insert(root, range)
 
     return root
+
+
+class Annotation(Range):
+    pass
+
+
+def group_overlapped_range(ranges: List[Range]) -> List[List[Range]]:
+    def get_range_start(x: Range) -> float:
+        return x.start
+
+    # sort by the start
+    ranges.sort(key=get_range_start)
+    overlapped_ranges = [(Range(ranges[0].start, ranges[0].end), [ranges[0]])]
+
+    for i in range(1, len(ranges)):
+        if ranges[i].is_overlap(overlapped_ranges[-1][0]):
+            overlapped_ranges_ranges[-1][0] = ranges[i].merge(overlapped_ranges[-1][0])
+            # overlapped_ranges_ranges[-1][0] =
+
+    #     if len(match_ranges) == 0:
+    #         overlapped_ranges.append(r)
+    return ranges
+
+group_overlapped_range([Annotation(1, 2), Annotation(4, 5)])
+group_overlapped_range([Range(1, 2), Range(4, 5)])
+
+group_overlapped_range([(1, 2), (4, 5)])

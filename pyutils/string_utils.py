@@ -4,6 +4,7 @@ import re
 from html.parser import HTMLParser
 from typing import List, Dict, Callable, Any, Set
 
+from pyutils.range_utils import IntervalTreeNode
 from pyutils.range_utils import Range, build_interval_tree
 
 
@@ -111,7 +112,7 @@ def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str
         :return: annotated string
     """
 
-    def remove_conflicted_range(node, judge: Callable[[Annotation, Annotation], Annotation]) -> bool:
+    def remove_conflicted_range(node: IntervalTreeNode, judge: Callable[[Annotation, Annotation], Annotation]) -> bool:
         """
             Remove conflicted children in this node, and return a bool value indicate that
             there is any conflict has been solved. The children of the node is 
@@ -124,47 +125,47 @@ def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str
             :param judge: True if first argument is better than the second argument
             :return: bool
         """
-        if len(node['children']) <= 1:
+        if len(node.children) <= 1:
             return False
 
         i = 1
-        children = [node['children'][0]]
-        while i < len(node['children']):
-            if children[-1]['range'].is_cross(node['children'][i]['range']):
-                if judge(children[-1]['range'], node['children'][i]['range']):
+        children = [node.children[0]]
+        while i < len(node.children):
+            if children[-1].range.is_cross(node.children[i].range):
+                if judge(children[-1].range, node.children[i].range):
                     # chosen node already picked, just don't do anything
                     pass
                 else:
-                    children[-1] = node['children'][i]
+                    children[-1] = node.children[i]
             else:
-                children.append(node['children'][i])
+                children.append(node.children[i])
             i += 1
 
-        is_conflict = len(children) != len(node['children'])
-        node['children'] = children
+        is_conflict = len(children) != len(node.children)
+        node.children = children
 
-        for child in node['children']:
+        for child in node.children:
             is_conflict = remove_conflicted_range(child, judge) or is_conflict
 
         return is_conflict
 
-    def annotate_substring(offset, string, annotation_node):
-        annotation_children = annotation_node['children']
-        annotation = annotation_node['range']
+    def annotate_substring(offset: int, string: str, annotation_node: IntervalTreeNode):
+        annotation_children = annotation_node.children
+        annotation = annotation_node.range
 
         if len(annotation_children) == 0:
             return annotation.molding(string)
 
         ranges = [0]
         for child in annotation_children:
-            ranges.append(child['range'].start - offset)
-            ranges.append(child['range'].end - offset)
+            ranges.append(child.range.start - offset)
+            ranges.append(child.range.end - offset)
         ranges.append(len(string))
 
         substrings = []
         for i, child in enumerate(annotation_children):
-            substring = child['range'].shift(-offset).get_anchor(string)
-            substring = annotate_substring(child['range'].start, substring, child)
+            substring = child.range.shift(-offset).get_anchor(string)
+            substring = annotate_substring(child.range.start, substring, child)
 
             substrings.append(string[ranges[i * 2]:ranges[i * 2 + 1]])
             substrings.append(substring)
@@ -225,14 +226,14 @@ def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str
 
     # build the annotation tree, the heart of the algorithm, which are used to render
     # the annotated string
-    annotation_trees = []
+    annotation_trees = []  # type: List[IntervalTreeNode]
     for g_annotation in g_annotations:
         if default_policy['NO_NESTED_ANNOTATION']:
             if len(g_annotation) > 1:
                 raise PolicyViolation('Not allowed nested annotations')
 
         annotation_tree = build_interval_tree(g_annotation)
-        annotation_tree['range'] = Annotation(annotation_tree['range'].start, annotation_tree['range'].end)
+        annotation_tree.range = Annotation(annotation_tree.range.start, annotation_tree.range.end)
 
         if len(g_annotation) > 1:
             # noinspection PyTypeChecker
@@ -241,24 +242,24 @@ def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str
                 raise PolicyViolation('Cannot render crossed annotations')
 
         if default_policy['IGNORE_NESTED_ANNOTATION']:
-            for child in annotation_tree['children']:
+            for child in annotation_tree.children:
                 # discard all children which are nested annotation
-                child['children'] = []
+                child.children = []
 
         annotation_trees.append(annotation_tree)
 
     # annotating the text
     ranges = [0]
     for tree in annotation_trees:
-        ranges.append(tree['range'].start)
-        ranges.append(tree['range'].end)
+        ranges.append(tree.range.start)
+        ranges.append(tree.range.end)
     ranges.append(len(string))
 
     annotated_strings = []
     for i, tree in enumerate(annotation_trees):
         substring = annotate_substring(
-            tree['range'].start,
-            tree['range'].get_anchor(string),
+            tree.range.start,
+            tree.range.get_anchor(string),
             tree
         )
         annotated_strings.append(string[ranges[i * 2]:ranges[i * 2 + 1]])
