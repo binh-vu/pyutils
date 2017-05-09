@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 from collections import OrderedDict
-from typing import Dict, Iterable, TypeVar, Union
+from typing import Dict, Iterable, TypeVar, Union, List
 
 import yaml
 
@@ -97,19 +97,35 @@ class Configuration(object):
         if init:
             self.defer_init(self, self)
 
-    def defer_init(self, global_conf: 'Configuration', config: 'Configuration'):
+    def defer_init(self, global_conf: 'Configuration', config: Union[List[str], 'Configuration']):
         """Initialize value in config"""
-        for prop in list(config.__conf.keys()):
-            value = config.__conf[prop]
-            if isinstance(value, StringConf):
-                if value.startswith('@@'):
-                    # value is a reference to other value as path
-                    value = global_conf.get_conf(value[2:]).as_path()
-                elif value.startswith('@'):
-                    value = global_conf.get_conf(value[1:])
-                config.__conf[prop] = value
-            elif isinstance(value, Configuration):
-                self.defer_init(global_conf, value)
+        if isinstance(config, list):
+            for i, item in enumerate(config):
+                if isinstance(item, StringConf):
+                    if item.startswith('@@'):
+                        # value is a reference to other value as path
+                        item = global_conf.get_conf(item[2:]).as_path()
+                    elif item.startswith('@'):
+                        item = global_conf.get_conf(item[1:])
+                    config[i] = item
+                elif isinstance(item, list):
+                    self.defer_init(global_conf, item)
+                elif isinstance(item, Configuration):
+                    self.defer_init(global_conf, item)
+        else:
+            for prop in list(config.__conf.keys()):
+                value = config.__conf[prop]
+                if isinstance(value, StringConf):
+                    if value.startswith('@@'):
+                        # value is a reference to other value as path
+                        value = global_conf.get_conf(value[2:]).as_path()
+                    elif value.startswith('@'):
+                        value = global_conf.get_conf(value[1:])
+                    config.__conf[prop] = value
+                elif isinstance(value, list):
+                    self.defer_init(global_conf, value)
+                elif isinstance(value, Configuration):
+                    self.defer_init(global_conf, value)
 
     def set_conf(self, key: str, value: RawPrimitiveType) -> 'Configuration':
         if type(value) is dict:

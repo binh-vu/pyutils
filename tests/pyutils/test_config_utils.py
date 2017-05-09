@@ -91,6 +91,9 @@ data:
     gold:
         monthly_expense: '@logs.expense'
         monthly_expense_path: '@@logs.expense'
+    checklists:
+        - '@logs.expense'
+        - '@@logs.expense'
 ''')
 
     config = load_config(config_file)
@@ -99,6 +102,10 @@ data:
     eq_(config.data.gold.monthly_expense, 'expense_sheets.csv')
     eq_(config.data.gold.monthly_expense.as_path(), '/home/peter/expense_sheets.csv')
     eq_(config.data.gold.monthly_expense_path, '/home/peter/expense_sheets.csv')
+    eq_(config.data.checklists, [
+        'expense_sheets.csv',
+        '/home/peter/expense_sheets.csv'
+    ])
 
 
 def test_to_dict_ops():
