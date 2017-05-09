@@ -11,6 +11,8 @@ import yaml
 
 
 class StringConf(str):
+
+    # noinspection PyInitNewSignature
     def __new__(cls, string: str, workdir: str) -> 'StringConf':
         # customize the constructor if needed
         obj = super(StringConf, cls).__new__(cls, string)
@@ -88,7 +90,7 @@ class Configuration(object):
             elif isinstance(value, str):
                 self.__conf[key] = StringConf(value, workdir)
             elif type(value) is list and len(value) > 0 and isinstance(value[0], str):
-                self.__conf[key] = map(lambda x: StringConf(x, workdir), value)
+                self.__conf[key] = [StringConf(x, workdir) for x in value]
             else:
                 self.__conf[key] = value
 
