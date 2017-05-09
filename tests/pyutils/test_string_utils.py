@@ -15,6 +15,13 @@ class HeaderAnnotation(Annotation):
         return '<h1>%s</h1>' % string
 
 
+def test_annotation_preview():
+    string = 'I can eat glass without harm'
+    annotation = HyperLinkAnnotation(string.find('glass'), string.find('glass') + 5)
+    eq_(annotation.get_anchor(string), 'glass')
+    eq_(annotation.preview(string, window_size=10), 'can eat glass without')
+    eq_(annotation.preview(string, window_size=10, molding=True), 'can eat <a>glass</a> without')
+
 def test_annotating_no_nested():
     string = '0123456789'
     annotations = [

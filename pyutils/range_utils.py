@@ -98,10 +98,6 @@ def build_interval_tree(ranges: List[Range]) -> IntervalTreeNode:
     return root
 
 
-class Annotation(Range):
-    pass
-
-
 def group_overlapped_range(ranges: List[Range]) -> List[Tuple[Range, List[Range]]]:
     if len(ranges) == 0:
         return []

@@ -22,6 +22,23 @@ class Annotation(Range):
     def molding(self, string: str) -> str:
         return string
 
+    def preview(self, text: str, window_size: int = 30, molding: bool = False, word_delimiter: str = ' ') -> str:
+        """
+        Preview the annotated text with the context
+        """
+        left_window = text[max(self.start - window_size, 0):self.start]
+        anchor = text[self.start:self.end]
+        right_window = text[self.end:self.end + window_size]
+
+        if word_delimiter:
+            left_window = left_window[left_window.find(word_delimiter)+1:]
+            right_window = right_window[:right_window.rfind(word_delimiter)]
+
+        if molding:
+            anchor = self.molding(anchor)
+
+        return left_window + anchor + right_window
+
 
 class PolicyViolation(Exception):
     pass
