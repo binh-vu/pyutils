@@ -5,7 +5,7 @@ import os
 from bson.objectid import ObjectId
 from nose.tools import ok_, eq_
 
-from pyutils.config_utils import load_config, write_config
+from pyutils.config_utils import load_config, write_config, StringConf
 
 
 def test_io():
@@ -100,13 +100,15 @@ data:
     eq_(config.logs.expense, 'expense_sheets.csv')
     eq_(config.logs.expense.as_path(), '/home/peter/expense_sheets.csv')
     eq_(config.data.gold.monthly_expense, 'expense_sheets.csv')
+    ok_(isinstance(config.data.gold.monthly_expense, StringConf))
     eq_(config.data.gold.monthly_expense.as_path(), '/home/peter/expense_sheets.csv')
     eq_(config.data.gold.monthly_expense_path, '/home/peter/expense_sheets.csv')
+    ok_(isinstance(config.data.gold.monthly_expense_path, StringConf))
     eq_(config.data.checklists, [
         'expense_sheets.csv',
         '/home/peter/expense_sheets.csv'
     ])
-
+    ok_(isinstance(config.data.checklists[0], StringConf))
 
 def test_to_dict_ops():
     file_id = str(ObjectId())

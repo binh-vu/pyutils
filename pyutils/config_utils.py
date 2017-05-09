@@ -26,9 +26,13 @@ class StringConf(str):
         return float(self)
 
     def as_path(self) -> str:
-        return os.path.abspath(os.path.join(self.__workdir, self))
+        return StringConf(os.path.abspath(os.path.join(self.__workdir, self)), self.__workdir)
 
-    def ensure_path_existence(self):
+    def ensure_path_existence(self) -> None:
+        """Ensure the path existed
+            1. If path is pointing to a file (using extension test), then make sure its directory existed
+            2. If path is pointing to a dir (otherwise), then make sure it existed
+        """
         path = self.as_path()
         _, ext = os.path.splitext(path)
 
@@ -41,7 +45,11 @@ class StringConf(str):
             if not os.path.exists(path):
                 os.makedirs(path)
 
-    def backup_path(self):
+    def backup_path(self) -> None:
+        """Back up the path
+            1. if the path doesn't exist: ensure it existed
+            2. otherwise, create backup files        
+        """
         path = self.as_path()
         dirname = os.path.dirname(path)
         basename = os.path.basename(path)
@@ -53,7 +61,7 @@ class StringConf(str):
                 int(fname.replace(basename + '-', ''))
                 for fname in os.listdir(dirname)
                 if fname.startswith(basename) and backup_reg.match(fname.replace(basename, '')) is not None
-                ]
+            ]
             if len(backup_versions) == 0:
                 most_recent_version = 0
             else:
