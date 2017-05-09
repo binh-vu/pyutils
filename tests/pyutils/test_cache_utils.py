@@ -16,6 +16,12 @@ class Counter(object):
         self.count += 1
         return self.count, message
 
+    def sum(self, a, b):
+        return a + b
+
+    def reduce(self, a, b):
+        return a - b
+
 
 def test_memory_cache():
     cache = Cache()
@@ -121,6 +127,8 @@ def test_cache_delegator():
         count, mess = cache_delegator.increase('messB')
         eq_(count, 2, 'Increate function is called because diff args')
 
+        eq_(cache_delegator.sum(5, 6), 11, 'Cache support multiple function')
+        eq_(cache_delegator.reduce(5, 6), -1, 'Cache support multiple function same number of args')
 
 @raises(AssertionError)
 def test_cache_delegator_must_context():

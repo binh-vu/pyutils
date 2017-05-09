@@ -76,10 +76,10 @@ class FileCache(object):
 
 
 class FileCacheDelegator(object):
-    def __init__(self, fpath, object_constructor):
-        self.file_cache = FileCache(fpath)
-        self.object_constructor = object_constructor  # type: Callable[[], object]
-        self.object = None  # type: object
+    def __init__(self, fpath: str, object_constructor: Callable[[], object]):
+        self.file_cache: str = FileCache(fpath)
+        self.object_constructor: Callable[[], object] = object_constructor
+        self.object: object = None  # type: object
         self.delegator = {}  # type: Dict[str, Callable[[*Any], Any]]
 
     def load_data(self):
@@ -94,26 +94,26 @@ class FileCacheDelegator(object):
     def invalidate(self):
         self.file_cache.invalidate()
 
-    def get_delegate_func(self, func_name: str) -> Callable[[Any], Any]:
+    def __get_delegate_func(self, func_name: str) -> Callable[[Any], Any]:
         def delegate(*args):
             if self.object is None:
                 self.object = self.object_constructor()
             return getattr(self.object, func_name)(*args)
+        delegate.__name__ = func_name
 
         return delegate
 
-    def get_exec_func(self, func: Callable[[Any], Any]) -> Callable[[Any], Any]:
+    def __get_exec_func(self, func: Callable[[Any], Any]) -> Callable[[Any], Any]:
         def exec_func(*args):
             return self.file_cache.exec_func(func, *args)
 
         return exec_func
 
-    def __getattr__(self, item):
-        # type: (str) -> Any
+    def __getattr__(self, item: str) -> Callable[[Any], Any]:
         """Alias of the cached function"""
 
         if item not in self.delegator:
-            self.delegator[item] = self.get_exec_func(self.get_delegate_func(item))
+            self.delegator[item] = self.__get_exec_func(self.__get_delegate_func(item))
 
         exec_func = self.delegator[item]
         return exec_func
