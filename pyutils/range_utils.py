@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import copy
-from typing import List, TypeVar
+from typing import List, Tuple
 
 
 class Range(object):
@@ -25,21 +25,25 @@ class Range(object):
         obj.end += offset
         return obj
 
-    def same_range(self, range):
+    def same_range(self, range: 'Range') -> bool:
         return self.start == range.start and self.end == range.end
 
-    def is_overlap(self, another):
+    def is_overlap(self, another: 'Range') -> bool:
         a, b = self, another
         if a.start > b.start:
             a, b = b, a
 
         return a.end > b.start
 
-    def is_contain(self, another):
+    def is_contain(self, another: 'Range') -> bool:
         return self.start <= another.start and self.end >= another.end
 
-    def is_cross(self, another):
+    def is_cross(self, another: 'Range') -> bool:
         return self.is_overlap(another) and not self.is_contain(another)
+
+    def update(self, another: 'Range') -> None:
+        self.start = another.start
+        self.end = another.end
 
 
 class IntervalTreeNode(object):
@@ -99,24 +103,22 @@ class Annotation(Range):
     pass
 
 
-def group_overlapped_range(ranges: List[Range]) -> List[List[Range]]:
+def group_overlapped_range(ranges: List[Range]) -> List[Tuple[Range, List[Range]]]:
+    if len(ranges) == 0:
+        return []
+
     def get_range_start(x: Range) -> float:
         return x.start
 
     # sort by the start
     ranges.sort(key=get_range_start)
-    overlapped_ranges = [(Range(ranges[0].start, ranges[0].end), [ranges[0]])]
+    overlapped_ranges: List[Tuple[Range, List[Range]]] = [(Range(ranges[0].start, ranges[0].end), [ranges[0]])]
 
     for i in range(1, len(ranges)):
         if ranges[i].is_overlap(overlapped_ranges[-1][0]):
-            overlapped_ranges_ranges[-1][0] = ranges[i].merge(overlapped_ranges[-1][0])
-            # overlapped_ranges_ranges[-1][0] =
+            overlapped_ranges[-1][0].update(ranges[i].merge(overlapped_ranges[-1][0]))
+            overlapped_ranges[-1][1].append(ranges[i])
+        else:
+            overlapped_ranges.append((Range(ranges[i].start, ranges[i].end), [ranges[i]]))
 
-    #     if len(match_ranges) == 0:
-    #         overlapped_ranges.append(r)
-    return ranges
-
-group_overlapped_range([Annotation(1, 2), Annotation(4, 5)])
-group_overlapped_range([Range(1, 2), Range(4, 5)])
-
-group_overlapped_range([(1, 2), (4, 5)])
+    return overlapped_ranges
