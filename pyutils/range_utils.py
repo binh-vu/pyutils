@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import copy
-from typing import List, Tuple
+from typing import List, Tuple, TypeVar
 
 
 class Range(object):
@@ -47,7 +47,6 @@ class Range(object):
 
 
 class IntervalTreeNode(object):
-
     def __init__(self, range: Range, children: List['IntervalTreeNode']):
         self.range = range
         self.children = children
@@ -111,7 +110,7 @@ def group_overlapped_range(ranges: List[Range]) -> List[Tuple[Range, List[Range]
         return x.start
 
     # sort by the start
-    ranges.sort(key=get_range_start)
+    ranges = sorted(ranges, key=get_range_start)
     overlapped_ranges: List[Tuple[Range, List[Range]]] = [(Range(ranges[0].start, ranges[0].end), [ranges[0]])]
 
     for i in range(1, len(ranges)):
