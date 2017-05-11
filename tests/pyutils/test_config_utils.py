@@ -1,15 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import os
+import os, uuid
 
-from bson.objectid import ObjectId
 from nose.tools import ok_, eq_
 
 from pyutils.config_utils import load_config, write_config, StringConf
 
 
 def test_io():
-    file_id = str(ObjectId())
+    file_id = str(uuid.uuid4())
     config_file = f'/tmp/config_file_{file_id}.txt'
     ok_(not os.path.exists(config_file))
 
@@ -49,7 +48,7 @@ dir:
 
 
 def test_dir_ops():
-    file_id = str(ObjectId())
+    file_id = str(uuid.uuid4())
     config_file = f'/tmp/config_file_{file_id}.txt'
     config_dir = f'/tmp/config_dir_{file_id}'
     ok_(not os.path.exists(config_file))
@@ -77,7 +76,7 @@ config_dir: {config_dir}
 
 
 def test_ref_ops():
-    file_id = str(ObjectId())
+    file_id = str(uuid.uuid4())
     config_file = f'/tmp/config_file_{file_id}.txt'
     ok_(not os.path.exists(config_file))
 
@@ -111,7 +110,7 @@ data:
     ok_(isinstance(config.data.checklists[0], StringConf))
 
 def test_to_dict_ops():
-    file_id = str(ObjectId())
+    file_id = str(uuid.uuid4())
     config_file = f'/tmp/config_file_{file_id}.txt'
     ok_(not os.path.exists(config_file))
 

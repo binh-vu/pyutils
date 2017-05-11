@@ -6,7 +6,7 @@ from setuptools import find_packages
 
 setup(
     name='pyutils',
-    version='1.1.6',
+    version='1.1.7',
     description='Utilities for python',
     author='Binh Vu',
     author_email='binhlvu@gmail.com',
