@@ -53,6 +53,7 @@ def test_parsing_structure():
 dir:
     __workdir__: /home/ubuntu
     download: Downloads
+    documents: '@#Documents'
 people:
   - name: peter
     mailbox: peter@hotmail.com
@@ -68,6 +69,11 @@ people:
     eq_(config.data.int_str.as_int(), 6)
     eq_(config.data['abc'], 'ahe')
     eq_(config.get_conf('data.abc'), 'ahe')
+
+    eq_(config.dir.download, 'Downloads')
+    eq_(config.dir.download.as_path(), '/home/ubuntu/Downloads')
+    eq_(config.dir.documents, '/home/ubuntu/Documents')
+
     ok_(isinstance(config.people, list))
     ok_(isinstance(config.people[0], Configuration))
     eq_(config.people[0].mailbox, 'peter@hotmail.com')

@@ -132,7 +132,11 @@ class Configuration(object):
                     if value.startswith('@@'):
                         # value is a reference to other value as path
                         value = global_conf.get_conf(value[2:]).as_path()
+                    elif value.startswith('@#'):
+                        # value is interpret as path
+                        value = StringConf(value[2:], config.__workdir).as_path()
                     elif value.startswith('@'):
+                        # value is a reference to other value
                         value = global_conf.get_conf(value[1:])
                     config.__conf[prop] = value
                 elif isinstance(value, list):
