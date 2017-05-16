@@ -10,12 +10,12 @@ from urllib.parse import urlparse, parse_qs, urlunparse
 
 class URLParam(object):
     def __init__(self, scheme: str, netloc: str, path: str, params: str, query: Dict[str, List[str]], fragment: str):
-        self.scheme = scheme
-        self.netloc = netloc
-        self.path = path
-        self.params = params
-        self.query = query
-        self.fragment = fragment
+        self.scheme: str = scheme
+        self.netloc: str = netloc
+        self.path: str = path
+        self.params: str = params
+        self.query: Dict[str, List[str]] = query
+        self.fragment: str = fragment
 
     def get_query_param(self, name: str) -> Union[str, List[str]]:
         value = self.query[name]
@@ -23,17 +23,15 @@ class URLParam(object):
             return value[0]
         return value
 
-    def add_query_param(self, name: str, value: str) -> 'URLParam':
+    def add_query_param(self, name: str, value: str):
         self.query[name] = value
-        return self
 
-    def keep_query_params(self, query_params: List[str]) -> 'URLParam':
+    def keep_query_params(self, query_params: List[str]):
         self.query = OrderedDict([
             (x, self.query[x])
             for x in query_params
             if x in self.query
         ])
-        return self
 
     def build_url(self) -> str:
         return urlunparse((
