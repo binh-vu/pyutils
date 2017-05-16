@@ -4,7 +4,7 @@ import os, uuid
 
 from nose.tools import ok_, eq_
 
-from pyutils.config_utils import load_config, write_config, StringConf
+from pyutils.config_utils import load_config, write_config, StringConf, Configuration
 
 
 def test_io():
@@ -28,14 +28,6 @@ dir:
     config = load_config(config_file)
     ok_(config.data.abc == 'ahe')
     ok_(config.data.abc.as_path() == '/tmp/ahe')
-    ok_(config.data.float == 6.1)
-    ok_(config.data.float_str == '6.1')
-    ok_(config.data.float_str.as_float() == 6.1)
-    ok_(config.data.int_str.as_int() == 6)
-    ok_(config.data['abc'] == 'ahe')
-    ok_(config.get_conf('data.abc') == 'ahe')
-    config.set_conf('data.test.abc', 5)
-    ok_(config.data.test.abc == 5)
 
     os.remove(config_file)
 
@@ -45,6 +37,44 @@ dir:
     ok_(os.path.exists(config_file + '.backup'))
     with open(config_file + '.backup', 'r') as f:
         eq_(content, f.read())
+
+
+def test_parsing_structure():
+    file_id = str(uuid.uuid4())
+    config_file = f'/tmp/config_file_{file_id}.txt'
+    ok_(not os.path.exists(config_file))
+
+    with open(config_file, 'w') as f:
+        content = f'''data:
+    abc: ahe
+    float: 6.1
+    float_str: '6.1'
+    int_str: '6'
+dir:
+    __workdir__: /home/ubuntu
+    download: Downloads
+people:
+  - name: peter
+    mailbox: peter@hotmail.com
+'''
+        f.write(content)
+
+    config = load_config(config_file)
+    eq_(config.data.abc, 'ahe')
+    eq_(config.data.abc.as_path(), '/tmp/ahe')
+    eq_(config.data.float, 6.1)
+    eq_(config.data.float_str, '6.1')
+    eq_(config.data.float_str.as_float(), 6.1)
+    eq_(config.data.int_str.as_int(), 6)
+    eq_(config.data['abc'], 'ahe')
+    eq_(config.get_conf('data.abc'), 'ahe')
+    ok_(isinstance(config.people, list))
+    ok_(isinstance(config.people[0], Configuration))
+    eq_(config.people[0].mailbox, 'peter@hotmail.com')
+    eq_(config.people[0].mailbox.as_path(), '/tmp/peter@hotmail.com')
+
+    config.set_conf('data.test.abc', 5)
+    eq_(config.data.test.abc, 5)
 
 
 def test_dir_ops():
@@ -108,6 +138,7 @@ data:
         '/home/peter/expense_sheets.csv'
     ])
     ok_(isinstance(config.data.checklists[0], StringConf))
+
 
 def test_to_dict_ops():
     file_id = str(uuid.uuid4())

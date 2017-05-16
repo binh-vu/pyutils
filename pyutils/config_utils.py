@@ -97,15 +97,20 @@ class Configuration(object):
                 self.__conf[key] = Configuration(value, workdir, False)
             elif isinstance(value, str):
                 self.__conf[key] = StringConf(value, workdir)
-            elif type(value) is list and len(value) > 0 and isinstance(value[0], str):
-                self.__conf[key] = [StringConf(x, workdir) for x in value]
+            elif type(value) is list and len(value) > 0:
+                if isinstance(value[0], str):
+                    self.__conf[key] = [StringConf(x, workdir) for x in value]
+                elif isinstance(value[0], dict):
+                    self.__conf[key] = [Configuration(x, workdir, False) for x in value]
+                else:
+                    self.__conf[key] = value
             else:
                 self.__conf[key] = value
 
         if init:
             self.defer_init(self, self)
 
-    def defer_init(self, global_conf: 'Configuration', config: Union[List[str], 'Configuration']):
+    def defer_init(self, global_conf: 'Configuration', config: Union[List, 'Configuration']):
         """Initialize value in config"""
         if isinstance(config, list):
             for i, item in enumerate(config):
@@ -140,6 +145,12 @@ class Configuration(object):
             value = Configuration(value, self.__workdir)
         elif type(value) is str:
             value = StringConf(value, self.__workdir)
+        elif type(value) is list and len(value) > 0:
+            if isinstance(value[0], str):
+                value = [StringConf(x, self.__workdir) for x in value]
+            elif isinstance(value[0], dict):
+                value = [Configuration(x, self.__workdir, False) for x in value]
+                self.defer_init(self, value)
 
         conf = self
         p_keys = key.split('.')
@@ -152,6 +163,7 @@ class Configuration(object):
 
         assert type(conf) is Configuration, 'Cannot assign property to primitive object'
         conf.__conf[p_keys[-1]] = value
+
         return self
 
     def get_conf(self, key: str) -> Union[PrimitiveType, 'Configuration']:
