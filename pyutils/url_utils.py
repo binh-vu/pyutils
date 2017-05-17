@@ -23,7 +23,7 @@ class URLParam(object):
             return value[0]
         return value
 
-    def add_query_param(self, name: str, value: str) -> 'URLParam':
+    def set_query_param(self, name: str, value: str) -> 'URLParam':
         self.query[name] = value
         return self
 
