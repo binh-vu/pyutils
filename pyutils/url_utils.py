@@ -23,15 +23,17 @@ class URLParam(object):
             return value[0]
         return value
 
-    def add_query_param(self, name: str, value: str):
+    def add_query_param(self, name: str, value: str) -> 'URLParam':
         self.query[name] = value
+        return self
 
-    def keep_query_params(self, query_params: List[str]):
+    def keep_query_params(self, query_params: List[str]) -> 'URLParam':
         self.query = OrderedDict([
             (x, self.query[x])
             for x in query_params
             if x in self.query
         ])
+        return self
 
     def build_url(self) -> str:
         return urlunparse((
