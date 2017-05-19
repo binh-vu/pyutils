@@ -11,7 +11,6 @@ import yaml
 
 
 class StringConf(str):
-
     # noinspection PyInitNewSignature
     def __new__(cls, string: str, workdir: str) -> 'StringConf':
         # customize the constructor if needed
@@ -79,8 +78,8 @@ PrimitiveType = TypeVar('PrimitiveType', int, float, StringConf)
 
 
 class Configuration(object):
-
-    def __init__(self, dict_object: Dict[str, Union[RawPrimitiveType, Dict]], workdir: str = '', init: bool=True) -> None:
+    def __init__(self, dict_object: Dict[str, Union[RawPrimitiveType, Dict]], workdir: str = '',
+                 init: bool = True) -> None:
         # if __workdir__ is defined in dict_object, it overwrites the bounded workdir
         if '__workdir__' in dict_object:
             workdir = os.path.join(workdir, dict_object['__workdir__'])

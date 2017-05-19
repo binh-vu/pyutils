@@ -4,7 +4,6 @@ import pyutils.range_utils as range
 import pyutils.string_utils as string
 import pyutils.list_utils as list
 import pyutils.cache_utils as cache
-import pyutils.jupyter_utils as jupyter
 import pyutils.search_utils as search
 import pyutils.random_utils as random
 import pyutils.config_utils as config
