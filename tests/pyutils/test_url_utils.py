@@ -16,3 +16,17 @@ def test_parse():
     eq_(url_param.query, {'q': ['haha'], 'limit': ['']})
     eq_(url_param.get_query_param('q'), 'haha')
     eq_(url_param.get_query_param('limit'), '')
+
+
+def test_parse_with_fragment():
+    url = 'http://vnexpress.net/article?q=haha&limit#q=software+engineer&start=50'
+    url_param = parse(url)
+    eq_(url_param.fragment, {'q': ['software engineer'], 'start': ['50']})
+    eq_(url_param.get_fragment_param('q'), 'software engineer')
+    eq_(url_param.get_fragment_param('start'), '50')
+
+
+def test_parse_with_fragment_str():
+    url = 'http://vnexpress.net/article?q=haha&limit#headline'
+    url_param = parse(url)
+    eq_(url_param.fragment, {'headline': ['']})
