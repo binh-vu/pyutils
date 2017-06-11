@@ -7,7 +7,7 @@ import operator
 
 class RandomState(object):
 
-    def __init__(self, seed=None):
+    def __init__(self, seed=None) -> None:
         self.seed = seed
         self.random_state = np.random.RandomState(seed=seed)
 
@@ -19,7 +19,7 @@ class RandomState(object):
         self.choice_p_nonzero_count = None
         self.choice_cdf = None
 
-    def set_choice_parameters(self, a, p):
+    def set_choice_parameters(self, a, p) -> 'RandomState':
         """
             Set parameter for self.choice function (which is optimization version of numpy.random.choice)
             :param a:

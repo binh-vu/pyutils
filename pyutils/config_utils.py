@@ -109,7 +109,7 @@ class Configuration(object):
         if init:
             self.defer_init(self, self)
 
-    def defer_init(self, global_conf: 'Configuration', config: Union[List, 'Configuration']):
+    def defer_init(self, global_conf: 'Configuration', config: Union[List, 'Configuration']) -> None:
         """Initialize value in config"""
         if isinstance(config, list):
             for i, item in enumerate(config):

@@ -10,14 +10,11 @@ class Progress(object):
         Help print beautiful progress (percentage, total, estimate time, etc.)
     """
 
-    """
-        @param total int
-    """
-    def __init__(self, total):
-        self.total = total
-        self.current = 0
-        self.last_time = None
-        self.average_task_time = 0
+    def __init__(self, total: int) -> None:
+        self.total: int = total
+        self.current: int = 0
+        self.last_time: float = None
+        self.average_task_time: float = 0
 
     def start(self):
         self.current = 0
@@ -67,7 +64,7 @@ class Progress(object):
 
 class Timing(object):
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.total_time = 0
         self.count = 0
         self.start_time = None
@@ -95,7 +92,7 @@ class Timing(object):
 
 class EmpiricalExpectation(object):
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.total = 0.0
         self.count = 0
 

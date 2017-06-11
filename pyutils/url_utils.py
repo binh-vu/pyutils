@@ -9,7 +9,7 @@ from urllib.parse import urlparse, parse_qs, urlunparse
 
 
 class URLParam(object):
-    def __init__(self, scheme: str, netloc: str, path: str, params: str, query: Dict[str, List[str]], fragment: Dict[str, List[str]]):
+    def __init__(self, scheme: str, netloc: str, path: str, params: str, query: Dict[str, List[str]], fragment: Dict[str, List[str]]) -> None:
         self.scheme: str = scheme
         self.netloc: str = netloc
         self.path: str = path
