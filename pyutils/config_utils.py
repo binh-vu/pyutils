@@ -189,6 +189,9 @@ class Configuration(object):
     def __contains__(self, item: str) -> bool:
         return item in self.__conf
 
+    def __delattr__(self, item):
+        self.__conf.pop(item)
+
     def to_dict(self, including_workdir=False) -> Dict[str, Union[RawPrimitiveType, Dict]]:
         dict_object = {}
         if including_workdir:

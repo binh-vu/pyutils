@@ -170,3 +170,29 @@ data:
             'monthly_expense_path': '/home/peter/expense_sheets.csv',
         }
     })
+
+
+def test_delete_and_contain_ops():
+    file_id = str(uuid.uuid4())
+    config_file = f'/tmp/config_file_{file_id}.txt'
+    ok_(not os.path.exists(config_file))
+
+    with open(config_file, 'w') as f:
+        f.write(f'''
+logs:
+    __workdir__: /home/peter
+    expense: expense_sheets.csv
+data:
+    __workdir__: '/data'
+    gold:
+        monthly_expense: '@logs.expense'
+        monthly_expense_path: '@@logs.expense'
+''')
+
+    config = load_config(config_file)
+    ok_('expense' in config.logs)
+    ok_('__workdir__' not in config.logs)
+    ok_('abc' not in config.logs)
+
+    del config.logs.expense
+    ok_('expense' not in config.logs)
