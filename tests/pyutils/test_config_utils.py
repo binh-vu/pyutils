@@ -4,7 +4,7 @@ import os, uuid
 
 from nose.tools import ok_, eq_
 
-from pyutils.config_utils import load_config, write_config, StringConf, Configuration
+from pyutils.config_utils import load_config, write_config, StringConf, Configuration, ListConf
 
 
 def test_io():
@@ -74,7 +74,7 @@ people:
     eq_(config.dir.download.as_path(), '/home/ubuntu/Downloads')
     eq_(config.dir.documents, '/home/ubuntu/Documents')
 
-    ok_(isinstance(config.people, list))
+    ok_(isinstance(config.people, ListConf))
     ok_(isinstance(config.people[0], Configuration))
     eq_(config.people[0].mailbox, 'peter@hotmail.com')
     eq_(config.people[0].mailbox.as_path(), '/tmp/peter@hotmail.com')
@@ -126,9 +126,11 @@ data:
     gold:
         monthly_expense: '@logs.expense'
         monthly_expense_path: '@@logs.expense'
+        monthly_expense_copied: '@#expense_sheets.csv'
     checklists:
         - '@logs.expense'
         - '@@logs.expense'
+        - '@#expense_sheets.csv'
 ''')
 
     config = load_config(config_file)
@@ -138,10 +140,12 @@ data:
     ok_(isinstance(config.data.gold.monthly_expense, StringConf))
     eq_(config.data.gold.monthly_expense.as_path(), '/home/peter/expense_sheets.csv')
     eq_(config.data.gold.monthly_expense_path, '/home/peter/expense_sheets.csv')
+    eq_(config.data.gold.monthly_expense_copied, '/data/expense_sheets.csv')
     ok_(isinstance(config.data.gold.monthly_expense_path, StringConf))
-    eq_(config.data.checklists, [
+    eq_(config.data.checklists.to_list(), [
         'expense_sheets.csv',
-        '/home/peter/expense_sheets.csv'
+        '/home/peter/expense_sheets.csv',
+        '/data/expense_sheets.csv'
     ])
     ok_(isinstance(config.data.checklists[0], StringConf))
 
@@ -193,6 +197,9 @@ data:
     ok_('expense' in config.logs)
     ok_('__workdir__' not in config.logs)
     ok_('abc' not in config.logs)
+    ok_('gold' in config.data)
 
     del config.logs.expense
+    del config.data['gold']
     ok_('expense' not in config.logs)
+    ok_('gold' not in config.data)

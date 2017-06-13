@@ -77,6 +77,37 @@ RawPrimitiveType = TypeVar('RawPrimitiveType', int, float, str)
 PrimitiveType = TypeVar('PrimitiveType', int, float, StringConf)
 
 
+class ListConf(object):
+
+    def __init__(self, array: list, workdir: str) -> 'ListConf':
+        self.array = array
+        self.workdir = workdir
+
+    def __getitem__(self, item):
+        return self.array[item]
+
+    def __setitem__(self, item, value):
+        self.array[item] = value
+
+    def __delitem__(self, item):
+        del self.array[item]
+
+    def __iter__(self):
+        return iter(self.array)
+
+    def __len__(self):
+        return len(self.array)
+
+    def to_list(self):
+        return self.array
+
+# class ListConf(list):
+#
+#     def __new__(cls, array: list, workdir: str) -> 'ListConf':
+#         obj = super(ListConf, cls).__new__(cls, array)
+#         obj.__workdir = workdir
+#         return obj
+
 class Configuration(object):
     def __init__(self, dict_object: Dict[str, Union[RawPrimitiveType, Dict]], workdir: str = '',
                  init: bool = True) -> None:
@@ -98,9 +129,9 @@ class Configuration(object):
                 self.__conf[key] = StringConf(value, workdir)
             elif type(value) is list and len(value) > 0:
                 if isinstance(value[0], str):
-                    self.__conf[key] = [StringConf(x, workdir) for x in value]
+                    self.__conf[key] = ListConf([StringConf(x, workdir) for x in value], workdir)
                 elif isinstance(value[0], dict):
-                    self.__conf[key] = [Configuration(x, workdir, False) for x in value]
+                    self.__conf[key] = ListConf([Configuration(x, workdir, False) for x in value], workdir)
                 else:
                     self.__conf[key] = value
             else:
@@ -109,14 +140,17 @@ class Configuration(object):
         if init:
             self.defer_init(self, self)
 
-    def defer_init(self, global_conf: 'Configuration', config: Union[List, 'Configuration']) -> None:
+    def defer_init(self, global_conf: 'Configuration', config: Union[ListConf, 'Configuration']) -> None:
         """Initialize value in config"""
-        if isinstance(config, list):
+        if isinstance(config, ListConf):
             for i, item in enumerate(config):
                 if isinstance(item, StringConf):
                     if item.startswith('@@'):
                         # value is a reference to other value as path
                         item = global_conf.get_conf(item[2:]).as_path()
+                    elif item.startswith('@#'):
+                        # value is interpret as path
+                        item = StringConf(item[2:], config.workdir).as_path()
                     elif item.startswith('@'):
                         item = global_conf.get_conf(item[1:])
                     config[i] = item
@@ -138,25 +172,29 @@ class Configuration(object):
                         # value is a reference to other value
                         value = global_conf.get_conf(value[1:])
                     config.__conf[prop] = value
-                elif isinstance(value, list):
+                elif isinstance(value, ListConf):
                     self.defer_init(global_conf, value)
                 elif isinstance(value, Configuration):
                     self.defer_init(global_conf, value)
 
-    def set_conf(self, key: str, value: RawPrimitiveType) -> 'Configuration':
+    def set_conf(self, key: str, value: RawPrimitiveType, split_key: bool=True) -> 'Configuration':
         if type(value) is dict:
             value = Configuration(value, self.__workdir)
         elif type(value) is str:
             value = StringConf(value, self.__workdir)
         elif type(value) is list and len(value) > 0:
             if isinstance(value[0], str):
-                value = [StringConf(x, self.__workdir) for x in value]
+                value = ListConf([StringConf(x, self.__workdir) for x in value], workdir)
             elif isinstance(value[0], dict):
-                value = [Configuration(x, self.__workdir, False) for x in value]
+                value = ListConf([Configuration(x, self.__workdir, False) for x in value], workdir)
                 self.defer_init(self, value)
 
         conf = self
-        p_keys = key.split('.')
+        if split_key:
+            p_keys = key.split('.')
+        else:
+            p_keys = [key]
+
         for p_key in p_keys[:-1]:
             assert type(conf) is Configuration, 'Cannot assign property to primitive object'
             if p_key not in conf.__conf:
@@ -188,6 +226,9 @@ class Configuration(object):
 
     def __contains__(self, item: str) -> bool:
         return item in self.__conf
+
+    def __delitem__(self, item):
+        self.__conf.pop(item)
 
     def __delattr__(self, item):
         self.__conf.pop(item)

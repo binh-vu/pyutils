@@ -11,24 +11,30 @@ class Range(object):
         self.end = end
 
     def get_id(self) -> str:
+        """Get id of range: (start, end)"""
         return '%s-%s' % (self.start, self.end)
 
     def size(self) -> int:
+        """Return size of range: end - start"""
         return self.end - self.start
 
     def merge(self, another: 'Range') -> 'Range':
+        """Merge 2 range to become new range"""
         return Range(min(self.start, another.start), max(self.end, another.end))
 
     def shift(self, offset: int) -> 'Range':
+        """Shift range by `offset`"""
         obj = copy.copy(self)
         obj.start += offset
         obj.end += offset
         return obj
 
     def same_range(self, range: 'Range') -> bool:
+        """Check if two ranges are equal"""
         return self.start == range.start and self.end == range.end
 
     def is_overlap(self, another: 'Range') -> bool:
+        """Check if two ranges are overlapped"""
         a, b = self, another
         if a.start > b.start:
             a, b = b, a
@@ -36,12 +42,15 @@ class Range(object):
         return a.end > b.start
 
     def is_contain(self, another: 'Range') -> bool:
+        """Check if this range contains `another` range"""
         return self.start <= another.start and self.end >= another.end
 
     def is_cross(self, another: 'Range') -> bool:
+        """Check if two ranges are crossed (overlapped but not contained)"""
         return self.is_overlap(another) and not self.is_contain(another)
 
     def update(self, another: 'Range') -> None:
+        """Update this range with `another` range value"""
         self.start = another.start
         self.end = another.end
 
