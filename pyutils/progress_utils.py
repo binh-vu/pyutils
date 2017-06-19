@@ -76,7 +76,7 @@ class Timing(object):
     def start(self):
         self.start_time = time.time()
 
-    def end(self):
+    def lap(self):
         self.total_time = self.total_time + (time.time() - self.start_time)
         self.count += 1
 

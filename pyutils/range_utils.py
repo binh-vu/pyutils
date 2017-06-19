@@ -95,12 +95,12 @@ def build_interval_tree(ranges: List[Range]) -> IntervalTreeNode:
             (2, 3)
     """
     left_most_value = min(ranges, key=lambda a: a.start).start
-    right_most_value = max(ranges, key=lambda a: a.end).end
+    right_most_value = max(ranges, key=lambda a: a.lap).end
 
     root = IntervalTreeNode(Range(left_most_value, right_most_value), [])
 
     # sort ranges by its length, descending order, and start inserting to the tree until insert all ranges
-    ranges = sorted(ranges, key=lambda a: a.end - a.start, reverse=True)
+    ranges = sorted(ranges, key=lambda a: a.lap - a.start, reverse=True)
     for range in ranges:
         tree_insert(root, range)
 
