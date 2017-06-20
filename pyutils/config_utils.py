@@ -101,6 +101,18 @@ class ListConf(object):
     def to_list(self):
         return self.array
 
+    def to_raw_list(self):
+        list_object = []
+        for v in self.array:
+            if isinstance(v, Configuration):
+                v = v.to_dict()
+            elif isinstance(v, ListConf):
+                v = v.to_raw_list()
+            elif isinstance(v, StringConf):
+                v = str(v)
+            list_object.append(v)
+        return list_object
+
 # class ListConf(list):
 #
 #     def __new__(cls, array: list, workdir: str) -> 'ListConf':
@@ -241,6 +253,8 @@ class Configuration(object):
         for k, v in self.__conf.items():
             if isinstance(v, Configuration):
                 v = v.to_dict()
+            elif isinstance(v, ListConf):
+                v = v.to_raw_list()
             elif isinstance(v, StringConf):
                 v = str(v)
             dict_object[k] = v
