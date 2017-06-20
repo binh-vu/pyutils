@@ -4,123 +4,155 @@ import logging
 import logging.config
 import os
 
-_logger = {'loggers': set(), 'handlers': {}}
+from pyutils.config_utils import Configuration
 
 
-def init_logging(config):
-    # Update logging handlers
-    deleting_handler_names = []
-    new_handlers = []
-    for handler_name in config.logging.handlers:
-        handler = config.logging.handlers[handler_name]
+class Logger(object):
 
-        if handler_name.startswith('$rolling') and handler_name[-1] == '$':
-            deleting_handler_names.append(handler_name)
-            new_handlers.append(handler.to_dict())
+    instance = None
 
-    for name in deleting_handler_names:
-        del config.logging.handlers[name]
+    def __init__(self, config: Configuration, init_logging: bool) -> None:
+        super().__init__()
+        self.config = config
+        self.init_logging = init_logging
+        self.loggers = set()
+        self.handlers = {}
 
-    for new_handler in new_handlers:
-        if new_handler['class'] == 'logging.FileHandler':
-            # unroll file handler
-            new_handler['class'] = [new_handler['class']] * len(new_handler['id'])
-            for arg in ['formatter', 'level', 'mode', 'filename']:
-                if isinstance(new_handler[arg], str):
-                    new_handler[arg] = [new_handler[arg]] * len(new_handler['id'])
-        else:
-            # unroll console handler
-            raise NotImplementedError('Not implement handler class: %s' % new_handler['class'])
+        if self.init_logging:
+            self.init()
 
-        for i, handler_name in enumerate(new_handler['id']):
-            handler = {}
-            for arg in ['class', 'formatter', 'level', 'mode', 'filename']:
-                handler[arg] = new_handler[arg][i]
+    @staticmethod
+    def get_instance(config, init_logging):
+        if Logger.instance is None:
+            Logger.instance = Logger(config, init_logging)
+        return Logger.instance
 
-            config.logging.handlers.set_conf(handler_name, handler, split_key=False)
+    def init(self):
+        # Update logging handlers
+        deleting_handler_names = []
+        new_handlers = []
+        for handler_name in self.config.logging.handlers:
+            handler = self.config.logging.handlers[handler_name]
 
-    # Update logging logger
-    deleting_logger_names = []
-    new_loggers = []
-    for logger_name in config.logging.loggers:
-        if logger_name.startswith('$rolling') and logger_name[-1] == '$':
-            deleting_logger_names.append(logger_name)
-            new_loggers.append(config.logging.loggers[logger_name].to_dict())
+            if handler_name.startswith('$rolling') and handler_name[-1] == '$':
+                deleting_handler_names.append(handler_name)
+                new_handlers.append(handler.to_dict())
 
-    for logger_name in deleting_logger_names:
-        del config.logging.loggers[logger_name]
+        for name in deleting_handler_names:
+            del self.config.logging.handlers[name]
 
-    for new_logger in new_loggers:
-        for arg in ['level', 'propagate']:
-            if isinstance(new_logger[arg], (str, bool)):
-                new_logger[arg] = [new_logger[arg]] * len(new_logger['id'])
+        for new_handler in new_handlers:
+            if new_handler['class'] == 'logging.FileHandler':
+                # unroll file handler
+                new_handler['class'] = [new_handler['class']
+                                        ] * len(new_handler['id'])
+                for arg in ['formatter', 'level', 'mode', 'filename']:
+                    if isinstance(new_handler[arg], str):
+                        new_handler[arg] = [new_handler[arg]
+                                            ] * len(new_handler['id'])
+            else:
+                # unroll console handler
+                raise NotImplementedError(
+                    'Not implement handler class: %s' % new_handler['class'])
 
-        if isinstance(new_logger['handlers'][0], str):
-            new_logger['handlers'] = [new_logger['handlers']] * len(new_logger['id'])
+            for i, handler_name in enumerate(new_handler['id']):
+                handler = {}
+                for arg in ['class', 'formatter', 'level', 'mode', 'filename']:
+                    handler[arg] = new_handler[arg][i]
 
-        for i, logger_name in enumerate(new_logger['id']):
-            logger = {arg: new_logger[arg][i] for arg in ['level', 'propagate', 'handlers']}
-            config.logging.loggers.set_conf(logger_name, logger, split_key=False)
+                self.config.logging.handlers.set_conf(
+                    handler_name, handler, split_key=False)
 
-    # Backup log file if needed
-    for handler_name in config.logging.handlers:
-        handler = config.logging.handlers[handler_name]
+        # Update logging logger
+        deleting_logger_names = []
+        new_loggers = []
+        for logger_name in self.config.logging.loggers:
+            if logger_name.startswith('$rolling') and logger_name[-1] == '$':
+                deleting_logger_names.append(logger_name)
+                new_loggers.append(
+                    self.config.logging.loggers[logger_name].to_dict())
 
-        if 'filename' in handler:
-            if '__no_backup' in handler and handler.__no_backup:
-                # only backup file when required, and the file must be not empty
-                content = 0
-                if os.path.exists(handler.filename.as_path()):
-                    with open(handler.filename.as_path(), 'rb') as f:
-                        content = len(f.read(5))  # read first 5 bytes to determine if file is empty or not
-                if content > 0:
-                    handler.filename.backup_path()
+        for logger_name in deleting_logger_names:
+            del self.config.logging.loggers[logger_name]
 
-            if '__no_backup' in handler:
-                del handler.__no_backup
+        for new_logger in new_loggers:
+            for arg in ['level', 'propagate']:
+                if isinstance(new_logger[arg], (str, bool)):
+                    new_logger[arg] = [new_logger[arg]] * len(new_logger['id'])
 
-            handler.filename.ensure_path_existence()
+            if isinstance(new_logger['handlers'][0], str):
+                new_logger['handlers'] = [new_logger['handlers']
+                                          ] * len(new_logger['id'])
 
+            for i, logger_name in enumerate(new_logger['id']):
+                logger = {
+                    arg: new_logger[arg][i]
+                    for arg in ['level', 'propagate', 'handlers']
+                }
+                self.config.logging.loggers.set_conf(
+                    logger_name, logger, split_key=False)
 
-def get_logger(config, name):
-    global _logger
+        # Backup log file if needed
+        for handler_name in self.config.logging.handlers:
+            handler = self.config.logging.handlers[handler_name]
 
-    if name in _logger['loggers']:
-        return logging.getLogger(name)
+            if 'filename' in handler:
+                if '__no_backup' in handler and handler.__no_backup:
+                    # only backup file when required, and the file must be not empty
+                    content = 0
+                    if os.path.exists(handler.filename.as_path()):
+                        with open(handler.filename.as_path(), 'rb') as f:
+                            content = len(
+                                f.read(5)
+                            )  # read first 5 bytes to determine if file is empty or not
+                    if content > 0:
+                        handler.filename.backup_path()
 
-    dict_config = config.logging.to_dict()
-    assert name in dict_config['loggers'], 'Undefined logger: %s' % name
+                if '__no_backup' in handler:
+                    del handler.__no_backup
 
-    _logger['loggers'].add(name)
+                handler.filename.ensure_path_existence()
 
-    logger_conf = dict_config['loggers'][name]
+    def get_logger(self, name):
+        if name in self.loggers:
+            return logging.getLogger(name)
 
-    logger = logging.getLogger(name)
-    logger.propagate = logger_conf['propagate']
-    # noinspection PyProtectedMember
-    logger.setLevel(logging._checkLevel(logger_conf['level']))
+        dict_config = self.config.logging.to_dict()
+        assert name in dict_config['loggers'], 'Undefined logger: %s' % name
 
-    dict_configurator = logging.config.DictConfigurator(dict_config)
+        self.loggers.add(name)
 
-    formatters = dict_configurator.config.get('formatters', {})
-    for fname in formatters:
-        try:
-            formatters[fname] = dict_configurator.configure_formatter(formatters[fname])
-        except Exception as e:
-            raise ValueError('Unable to configure formatter %r: %s' % (fname, e))
+        logger_conf = dict_config['loggers'][name]
 
-    for handler_name in dict_config['loggers'][name]['handlers']:
-        if handler_name not in _logger['handlers']:
-            # important to use configuration passed to dict_configurator instead of dict_config
-            # because it has been processed to change file
-            handler = dict_configurator.configure_handler(dict_configurator.config['handlers'][handler_name])
+        logger = logging.getLogger(name)
+        logger.propagate = logger_conf['propagate']
+        # noinspection PyProtectedMember
+        logger.setLevel(logging._checkLevel(logger_conf['level']))
 
-            _logger['handlers'][handler_name] = handler
+        dict_configurator = logging.config.DictConfigurator(dict_config)
 
-        handler = _logger['handlers'][handler_name]
-        logger.addHandler(handler)
+        formatters = dict_configurator.config.get('formatters', {})
+        for fname in formatters:
+            try:
+                formatters[fname] = dict_configurator.configure_formatter(
+                    formatters[fname])
+            except Exception as e:
+                raise ValueError('Unable to configure formatter %r: %s' %
+                                 (fname, e))
 
-    if 'filters' in logger_conf:
-        raise NotImplementedError('Not support filters')
+        for handler_name in dict_config['loggers'][name]['handlers']:
+            if handler_name not in self.handlers:
+                # important to use configuration passed to dict_configurator instead of dict_config
+                # because it has been processed to change file
+                handler = dict_configurator.configure_handler(
+                    dict_configurator.config['handlers'][handler_name])
 
-    return logger
+                self.handlers[handler_name] = handler
+
+            handler = self.handlers[handler_name]
+            logger.addHandler(handler)
+
+        if 'filters' in logger_conf:
+            raise NotImplementedError('Not support filters')
+
+        return logger
