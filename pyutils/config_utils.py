@@ -18,6 +18,9 @@ class StringConf(str):
         obj.__workdir = workdir
         return obj
 
+    def __add__(self, s: str) -> str:
+        return StringConf(super().__add__(s), self.__workdir)
+
     def as_int(self) -> int:
         return int(self)
 
@@ -57,8 +60,7 @@ class StringConf(str):
             # find the most recent back up
             backup_reg = re.compile('^-\d+$')
             backup_versions = [
-                int(fname.replace(basename + '-', ''))
-                for fname in os.listdir(dirname)
+                int(fname.replace(basename + '-', '')) for fname in os.listdir(dirname)
                 if fname.startswith(basename) and backup_reg.match(fname.replace(basename, '')) is not None
             ]
             if len(backup_versions) == 0:
@@ -78,7 +80,6 @@ PrimitiveType = TypeVar('PrimitiveType', int, float, StringConf)
 
 
 class ListConf(object):
-
     def __init__(self, array: list, workdir: str) -> 'ListConf':
         self.array = array
         self.workdir = workdir
@@ -113,6 +114,7 @@ class ListConf(object):
             list_object.append(v)
         return list_object
 
+
 # class ListConf(list):
 #
 #     def __new__(cls, array: list, workdir: str) -> 'ListConf':
@@ -120,9 +122,9 @@ class ListConf(object):
 #         obj.__workdir = workdir
 #         return obj
 
+
 class Configuration(object):
-    def __init__(self, dict_object: Dict[str, Union[RawPrimitiveType, Dict]], workdir: str = '',
-                 init: bool = True) -> None:
+    def __init__(self, dict_object: Dict[str, Union[RawPrimitiveType, Dict]], workdir: str='', init: bool=True) -> None:
         # if __workdir__ is defined in dict_object, it overwrites the bounded workdir
         if '__workdir__' in dict_object:
             workdir = os.path.join(workdir, dict_object['__workdir__'])
@@ -276,9 +278,7 @@ def load_config(fpath: str) -> Configuration:
                 loader.flatten_mapping(node)
                 return object_pairs_hook(loader.construct_pairs(node))
 
-            OrderedLoader.add_constructor(
-                yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-                construct_mapping)
+            OrderedLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
             return yaml.load(stream, OrderedLoader)
 
         # noinspection PyTypeChecker
@@ -294,9 +294,7 @@ def write_config(config: Configuration, fpath: str) -> None:
             pass
 
         def _dict_representer(dumper, data):
-            return dumper.represent_mapping(
-                yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-                data.items())
+            return dumper.represent_mapping(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, data.items())
 
         OrderedDumper.add_representer(OrderedDict, _dict_representer)
         return yaml.dump(data, stream, OrderedDumper, **kwargs)

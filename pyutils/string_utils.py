@@ -176,7 +176,7 @@ def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str
         ranges = [0]
         for child in annotation_children:
             ranges.append(child.range.start - offset)
-            ranges.append(child.range.lap - offset)
+            ranges.append(child.range.end - offset)
         ranges.append(len(string))
 
         substrings = []
@@ -250,7 +250,7 @@ def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str
                 raise PolicyViolation('Not allowed nested annotations')
 
         annotation_tree = build_interval_tree(g_annotation)
-        annotation_tree.range = Annotation(annotation_tree.range.start, annotation_tree.range.lap)
+        annotation_tree.range = Annotation(annotation_tree.range.start, annotation_tree.range.end)
 
         if len(g_annotation) > 1:
             # noinspection PyTypeChecker
@@ -269,7 +269,7 @@ def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str
     ranges = [0]
     for tree in annotation_trees:
         ranges.append(tree.range.start)
-        ranges.append(tree.range.lap)
+        ranges.append(tree.range.end)
     ranges.append(len(string))
 
     annotated_strings = []
