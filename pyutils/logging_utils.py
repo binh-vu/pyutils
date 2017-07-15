@@ -17,6 +17,7 @@ class Logger(object):
         self.init_logging = init_logging
         self.loggers = set()
         self.handlers = {}
+        self.unrolling_logger()
 
         if self.init_logging:
             self.init()
@@ -27,7 +28,7 @@ class Logger(object):
             Logger.instance = Logger(config, init_logging)
         return Logger.instance
 
-    def init(self):
+    def unrolling_logger(self):
         # Update logging handlers
         deleting_handler_names = []
         new_handlers = []
@@ -42,23 +43,15 @@ class Logger(object):
             del self.config.logging.handlers[name]
 
         for new_handler in new_handlers:
-            if new_handler['class'] == 'logging.FileHandler':
-                # unroll file handler
-                new_handler['class'] = [new_handler['class']
-                                        ] * len(new_handler['id'])
-                for arg in ['formatter', 'level', 'mode', 'filename']:
-                    if isinstance(new_handler[arg], str):
-                        new_handler[arg] = [new_handler[arg]
-                                            ] * len(new_handler['id'])
-            else:
-                # unroll console handler
-                raise NotImplementedError(
-                    'Not implement handler class: %s' % new_handler['class'])
+            for arg in new_handler.keys():
+                if isinstance(new_handler[arg], (str, int, float)):
+                    new_handler[arg] = [new_handler[arg]] * len(new_handler['id'])
 
             for i, handler_name in enumerate(new_handler['id']):
                 handler = {}
-                for arg in ['class', 'formatter', 'level', 'mode', 'filename']:
-                    handler[arg] = new_handler[arg][i]
+                for arg in new_handler.keys():
+                    if arg != 'id':
+                        handler[arg] = new_handler[arg][i]
 
                 self.config.logging.handlers.set_conf(
                     handler_name, handler, split_key=False)
@@ -92,6 +85,7 @@ class Logger(object):
                 self.config.logging.loggers.set_conf(
                     logger_name, logger, split_key=False)
 
+    def init(self):
         # Backup log file if needed
         for handler_name in self.config.logging.handlers:
             handler = self.config.logging.handlers[handler_name]
