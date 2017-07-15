@@ -115,13 +115,6 @@ class ListConf(object):
         return list_object
 
 
-# class ListConf(list):
-#
-#     def __new__(cls, array: list, workdir: str) -> 'ListConf':
-#         obj = super(ListConf, cls).__new__(cls, array)
-#         obj.__workdir = workdir
-#         return obj
-
 
 class Configuration(object):
     def __init__(self, dict_object: Dict[str, Union[RawPrimitiveType, Dict]], workdir: str='', init: bool=True) -> None:
