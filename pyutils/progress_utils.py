@@ -62,7 +62,7 @@ class Progress(object):
         )
 
 
-class Timing(object):
+class Timer(object):
 
     def __init__(self) -> None:
         self.total_time = 0
@@ -78,6 +78,7 @@ class Timing(object):
 
     def lap(self):
         self.total_time = self.total_time + (time.time() - self.start_time)
+        self.start_time = time.time()
         self.count += 1
 
     def get_average_time(self, precision=4):
