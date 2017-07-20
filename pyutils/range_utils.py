@@ -29,11 +29,11 @@ class Range(object):
         obj.end += offset
         return obj
 
-    def same_range(self, range: 'Range') -> bool:
+    def is_equal(self, range: 'Range') -> bool:
         """Check if two ranges are equal"""
         return self.start == range.start and self.end == range.end
 
-    def is_overlap(self, another: 'Range') -> bool:
+    def is_overlapped(self, another: 'Range') -> bool:
         """Check if two ranges are overlapped"""
         a, b = self, another
         if a.start > b.start:
@@ -41,13 +41,13 @@ class Range(object):
 
         return a.end > b.start
 
-    def is_contain(self, another: 'Range') -> bool:
+    def is_containing(self, another: 'Range') -> bool:
         """Check if this range contains `another` range"""
         return self.start <= another.start and self.end >= another.end
 
     def is_cross(self, another: 'Range') -> bool:
         """Check if two ranges are crossed (overlapped but not contained)"""
-        return self.is_overlap(another) and not self.is_contain(another)
+        return self.is_overlapped(another) and not self.is_containing(another)
 
     def update(self, another: 'Range') -> None:
         """Update this range with `another` range value"""
@@ -64,7 +64,7 @@ class IntervalTreeNode(object):
 def build_interval_tree(ranges: List[Range]) -> IntervalTreeNode:
     def tree_insert(node: IntervalTreeNode, range: Range):
         for child in node.children:
-            if child.range.is_contain(range):
+            if child.range.is_containing(range):
                 return tree_insert(child, range)
 
         node.children.append(IntervalTreeNode(
@@ -119,7 +119,7 @@ def group_overlapped_range(ranges: List[Range]) -> List[Tuple[Range, List[Range]
     overlapped_ranges: List[Tuple[Range, List[Range]]] = [(Range(ranges[0].start, ranges[0].end), [ranges[0]])]
 
     for i in range(1, len(ranges)):
-        if ranges[i].is_overlap(overlapped_ranges[-1][0]):
+        if ranges[i].is_overlapped(overlapped_ranges[-1][0]):
             overlapped_ranges[-1][0].update(ranges[i].merge(overlapped_ranges[-1][0]))
             overlapped_ranges[-1][1].append(ranges[i])
         else:

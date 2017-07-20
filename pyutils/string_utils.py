@@ -212,7 +212,7 @@ def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str
     g_range = annotations[0]
 
     for i in range(1, len(annotations)):
-        if g_range.is_overlap(annotations[i]):
+        if g_range.is_overlapped(annotations[i]):
             g_annotations[-1].append(annotations[i])
             g_range = g_range.merge(annotations[i])
         else:
@@ -227,7 +227,7 @@ def annotate_string(string: str, annotations: List[Annotation], policy: Dict[str
         for g_annotation in g_annotations:
             tmp_annotation = [g_annotation[0]]
             for i in range(1, len(g_annotation)):
-                if tmp_annotation[-1].same_range(g_annotation[i]):
+                if tmp_annotation[-1].is_equal(g_annotation[i]):
                     tmp_annotation[-1] = default_policy['MERGE_FUNCTION'](tmp_annotation[-1], g_annotation[i])
                 else:
                     tmp_annotation.append(g_annotation[i])
