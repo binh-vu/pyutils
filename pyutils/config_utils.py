@@ -10,6 +10,33 @@ from typing import Dict, Iterable, TypeVar, Union, List
 import yaml
 
 
+class RemoteOSPath(object):
+
+    # remote path: scheme://[host]:[port]/ or it could be scheme://user@host:port/
+    remote_path_reg = re.compile(r'''([a-zA-Z]+://[a-zA-Z0-9:]*)(/.*)?''')
+
+    @staticmethod
+    def join(parent_path, child_path):
+        # if the child path is a fully remote path, then it is remote abs path
+        if RemoteOSPath.remote_path_reg.match(child_path):
+            return child_path
+
+        match = RemoteOSPath.remote_path_reg.match(parent_path)
+        if match is None:
+            return os.path.join(parent_path, child_path)
+
+        remote_host, remote_path = match.groups()
+        return remote_host + RemoteOSPath.abspath(os.path.join(remote_path, child_path))
+
+    @staticmethod
+    def abspath(path):
+        match = RemoteOSPath.remote_path_reg.match(path)
+        if match is not None:
+            remote_host, remote_path = match.groups()
+            return remote_host + os.path.abspath(remote_path)
+        return os.path.abspath(path)
+
+
 class StringConf(str):
     # noinspection PyInitNewSignature
     def __new__(cls, string: str, workdir: str) -> 'StringConf':
@@ -29,8 +56,8 @@ class StringConf(str):
 
     def as_path(self, abspath=False) -> str:
         if abspath:
-            return StringConf(os.path.abspath(os.path.join(self.__workdir, self)), self.__workdir)
-        return StringConf(os.path.join(self.__workdir, self), self.__workdir)
+            return StringConf(RemoteOSPath.abspath(RemoteOSPath.join(self.__workdir, self)), self.__workdir)
+        return StringConf(RemoteOSPath.join(self.__workdir, self), self.__workdir)
 
     def ensure_path_existence(self) -> None:
         """Ensure the path existed
@@ -117,12 +144,11 @@ class ListConf(object):
         return list_object
 
 
-
 class Configuration(object):
     def __init__(self, dict_object: Dict[str, Union[RawPrimitiveType, Dict]], workdir: str='', init: bool=True) -> None:
         # if __workdir__ is defined in dict_object, it overwrites the bounded workdir
         if '__workdir__' in dict_object:
-            workdir = os.path.join(workdir, dict_object['__workdir__'])
+            workdir = RemoteOSPath.join(workdir, dict_object['__workdir__'])
 
         self.__dict_object = dict_object  # Dict
         self.__workdir = workdir  # type: str
