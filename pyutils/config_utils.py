@@ -54,10 +54,8 @@ class StringConf(str):
     def as_float(self) -> float:
         return float(self)
 
-    def as_path(self, abspath=False) -> str:
-        if abspath:
-            return StringConf(RemoteOSPath.abspath(RemoteOSPath.join(self.__workdir, self)), self.__workdir)
-        return StringConf(RemoteOSPath.join(self.__workdir, self), self.__workdir)
+    def as_path(self) -> str:
+        return StringConf(RemoteOSPath.abspath(RemoteOSPath.join(self.__workdir, self)), self.__workdir)
 
     def ensure_path_existence(self) -> None:
         """Ensure the path existed
