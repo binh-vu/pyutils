@@ -148,9 +148,9 @@ class Configuration(object):
         if '__workdir__' in dict_object:
             workdir = RemoteOSPath.join(workdir, dict_object['__workdir__'])
 
-        self.__dict_object = dict_object  # Dict
-        self.__workdir = workdir  # type: str
-        self.__conf = OrderedDict()  # type: OrderedDict[str, Union[PrimitiveType, Configuration]]
+        self.__dict_object: Dict = dict_object
+        self.__workdir: str = workdir
+        self.__conf: OrderedDict[str, Union[PrimitiveType, Configuration]] = OrderedDict()
 
         for key, value in dict_object.items():
             if key in {'__workdir__'}:

@@ -203,3 +203,25 @@ data:
     del config.data['gold']
     ok_('expense' not in config.logs)
     ok_('gold' not in config.data)
+
+
+def test_iter():
+    file_id = str(uuid.uuid4())
+    config_file = f'/tmp/config_file_{file_id}.txt'
+    ok_(not os.path.exists(config_file))
+
+    with open(config_file, 'w') as f:
+        f.write(f'''
+logs:
+    __workdir__: /home/peter
+    expense: expense_sheets.csv
+data:
+    __workdir__: '/data'
+    gold:
+        monthly_expense: '@logs.expense'
+        monthly_expense_path: '@@logs.expense'
+''')
+
+    config = load_config(config_file)
+    ok_(list(config.data.gold.items()), [('monthly_expense', 'expense_sheets.csv'), ('monthly_expense_path', '/home/peter/expense_sheets.csv')])
+    ok_(list(config.data.gold), ['monthly_expense', 'monthly_expense_path'])
