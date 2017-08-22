@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 from collections import OrderedDict
-from typing import Dict, Iterable, TypeVar, Union, List
+from typing import Dict, Iterable, TypeVar, Union
 
 import yaml
 
@@ -38,7 +38,7 @@ class RemoteOSPath(object):
 
 
 class StringConf(str):
-    # noinspection PyInitNewSignature
+    # noinspection PyInitNewSignature,PyTypeChecker
     def __new__(cls, string: str, workdir: str) -> 'StringConf':
         # customize the constructor if needed
         obj = super(StringConf, cls).__new__(cls, string)
@@ -54,7 +54,7 @@ class StringConf(str):
     def as_float(self) -> float:
         return float(self)
 
-    def as_path(self) -> str:
+    def as_path(self) -> 'StringConf':
         return StringConf(RemoteOSPath.abspath(RemoteOSPath.join(self.__workdir, self)), self.__workdir)
 
     def ensure_path_existence(self) -> None:
@@ -107,7 +107,7 @@ PrimitiveType = TypeVar('PrimitiveType', int, float, StringConf)
 
 
 class ListConf(object):
-    def __init__(self, array: list, workdir: str) -> 'ListConf':
+    def __init__(self, array: list, workdir: str) -> None:
         self.array = array
         self.workdir = workdir
 
@@ -187,7 +187,7 @@ class Configuration(object):
                     elif item.startswith('@'):
                         item = global_conf.get_conf(item[1:])
                     config[i] = item
-                elif isinstance(item, list):
+                elif isinstance(item, ListConf):
                     self.defer_init(global_conf, item)
                 elif isinstance(item, Configuration):
                     self.defer_init(global_conf, item)
@@ -217,9 +217,9 @@ class Configuration(object):
             value = StringConf(value, self.__workdir)
         elif type(value) is list and len(value) > 0:
             if isinstance(value[0], str):
-                value = ListConf([StringConf(x, self.__workdir) for x in value], workdir)
+                value = ListConf([StringConf(x, self.__workdir) for x in value], self.__workdir)
             elif isinstance(value[0], dict):
-                value = ListConf([Configuration(x, self.__workdir, False) for x in value], workdir)
+                value = ListConf([Configuration(x, self.__workdir, False) for x in value], self.__workdir)
                 self.defer_init(self, value)
 
         conf = self
