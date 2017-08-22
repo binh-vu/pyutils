@@ -266,6 +266,9 @@ class Configuration(object):
     def __delattr__(self, item):
         self.__conf.pop(item)
 
+    def items(self):
+        return self.__conf.items()
+
     def to_dict(self, including_workdir=False) -> Dict[str, Union[RawPrimitiveType, Dict]]:
         dict_object = {}
         if including_workdir:
