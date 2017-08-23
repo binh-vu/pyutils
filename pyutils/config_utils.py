@@ -126,6 +126,9 @@ class ListConf(object):
     def __len__(self):
         return len(self.array)
 
+    def as_path(self) -> str:
+        return RemoteOSPath.abspath(self.workdir)
+
     def to_list(self):
         return self.array
 
@@ -265,6 +268,9 @@ class Configuration(object):
 
     def __delattr__(self, item):
         self.__conf.pop(item)
+
+    def as_path(self) -> str:
+        return RemoteOSPath.abspath(self.__workdir)
 
     def items(self):
         return self.__conf.items()
