@@ -13,11 +13,13 @@ class Progress(object):
     def __init__(self, total: int) -> None:
         self.total: int = total
         self.current: int = 0
+        self.start_time: datetime = None
         self.last_time: float = None
         self.average_task_time: float = 0
 
     def start(self):
         self.current = 0
+        self.start_time = datetime.now()
         return self.report()
 
     def finish_one(self):
@@ -34,8 +36,11 @@ class Progress(object):
         self.last_time = time.time()
         return self.report()
 
-    def report(self, current_time=True, eta=True, time_per_task=True):
+    def report(self, start_time=True, current_time=True, eta=True, time_per_task=True):
         report_str = []
+
+        if start_time:
+            report_str.append(self.start_time.strftime('%Y-%m-%d %H:%M:%S'))
 
         if current_time:
             current_time_str = 'Current time: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
