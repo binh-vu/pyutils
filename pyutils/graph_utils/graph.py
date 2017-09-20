@@ -113,9 +113,9 @@ class Graph(Generic[NodeType, LinkType]):
             self.node_index[attr][node[attr]].remove(node.get_id())
 
         # remove links
-        for lid in node.outgoing_links:
+        for lid in node.get_outgoing_links_by_attrs():
             self.remove_link(lid)
-        for lid in node.incoming_links:
+        for lid in node.get_incoming_links_by_attrs():
             self.remove_link(lid)
         del self.nodes[node.get_id()]
 
