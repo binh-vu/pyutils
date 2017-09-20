@@ -1,3 +1,4 @@
+orderedset
 pyyaml
 IPython
 json2html

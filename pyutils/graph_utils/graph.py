@@ -1,26 +1,18 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import os
-import subprocess
-import ujson
-import uuid
 from collections import OrderedDict, defaultdict, deque
-from typing import List, Set, Dict, Any, Generator, Union, Generic, TypeVar, Tuple
+from typing import List, Set, Dict, Any, Generator, Union, Generic, TypeVar
 
-import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
 from orderedset import OrderedSet
 
-from semantic_modeling.config import config
-from semantic_modeling.models.graph_link import GraphLink
-from semantic_modeling.models.graph_node import GraphNode, GraphNodeType
+from pyutils.graph_utils.graph_link import GraphLink
+from pyutils.graph_utils.graph_node import GraphNode
 
 NodeType = TypeVar('GraphNode', covariant=True, bound=GraphNode)
 LinkType = TypeVar('GraphLink', covariant=True, bound=GraphLink)
 
 
 class Graph(Generic[NodeType, LinkType]):
-
     def __init__(self, node_index_attributes: List[str]=None, link_index_attributes: List[str]=None) -> None:
         """
         :param node_index_attributes: node's attributes to be indexed
@@ -292,7 +284,6 @@ class Graph(Generic[NodeType, LinkType]):
         return True
 
     def contain_tree(self, tree: 'Graph[NodeType, LinkType]') -> bool:
-
         def contain_tree_at(tree: GraphNode, graph: 'Graph[NodeType, LinkType]', node: GraphNode) -> bool:
             """This algorithm do greedy choice, when they select links to match, if corresponding subtree is matched then that link is what they think is correct"""
             if node.label != tree.label:
