@@ -112,11 +112,19 @@ class Logger(object):
             return logging.getLogger(name)
 
         dict_config = self.config.logging.to_dict()
-        assert name in dict_config['loggers'], 'Undefined logger: %s' % name
+
+        ns_hierarchy = name.split(".")
+        config_name = name
+        for i in range(len(name) - 1, -1, -1):
+            config_name = ".".join(ns_hierarchy[:i])
+            if config_name in dict_config['loggers']:
+                break
+
+        assert config_name in dict_config['loggers'], 'Undefined logger: %s' % name
 
         self.loggers.add(name)
 
-        logger_conf = dict_config['loggers'][name]
+        logger_conf = dict_config['loggers'][config_name]
 
         logger = logging.getLogger(name)
         logger.propagate = logger_conf['propagate']
@@ -134,7 +142,7 @@ class Logger(object):
                 raise ValueError('Unable to configure formatter %r: %s' %
                                  (fname, e))
 
-        for handler_name in dict_config['loggers'][name]['handlers']:
+        for handler_name in logger_conf['handlers']:
             if handler_name not in self.handlers:
                 # important to use configuration passed to dict_configurator instead of dict_config
                 # because it has been processed to change file
