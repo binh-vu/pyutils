@@ -36,11 +36,11 @@ class Progress(object):
         self.last_time = time.time()
         return self.report()
 
-    def report(self, start_time=True, current_time=True, eta=True, time_per_task=True):
+    def report(self, start_time=True, current_time=True, eta=True, time_per_task=True, total_time=True):
         report_str = []
 
         if start_time:
-            report_str.append(self.start_time.strftime('%Y-%m-%d %H:%M:%S'))
+            report_str.append('Start time: ' + self.start_time.strftime('%Y-%m-%d %H:%M:%S'))
 
         if current_time:
             current_time_str = 'Current time: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -60,6 +60,10 @@ class Progress(object):
                 eta_str = str(timedelta(seconds=eta_str))[:-3]
             eta_str = 'ETA: ' + eta_str
             report_str.append(eta_str)
+
+        if total_time:
+            total_time_str = 'Total time: ' + str(datetime.now() - self.start_time)[:-3]
+            report_str.append(total_time_str)
 
         return '%.2f%% (%s/%s). %s' % (
             self.current * 100.0 / self.total,
