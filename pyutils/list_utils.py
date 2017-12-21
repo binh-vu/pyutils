@@ -69,6 +69,8 @@ def group_by(array: Iterable[T], key: Callable[[T], Union[str, int, float]]=None
     Example:
         >>> group_by([5, 1, 3, 1, 3, 5, 2])
         [[5, 5], [1, 1], [3, 3], [2]]
+        >>> group_by([5, 1, 3, 1, 3, 5, 2], preserve_order=True)
+        [[5, 5], [1, 1], [3, 3], [2]]
         >>> group_by([(5, 'a'), (1, 'b'), (3, 'a'), (1, 'a'), (5, 'c'), (2, 'd')], lambda x: x[0])
         [[(5, 'a'), (5, 'c')], [(1, 'b'), (1, 'a')], [(3, 'a')], [(2, 'd')]]
     """
@@ -100,10 +102,26 @@ def flatten(array: Iterable[Iterable[T]]) -> List[T]:
 
 
 class _(Generic[T]):
-    """List wrapper to write map/reduce/filter function shorter
+    """List wrapper to write map/reduce/filter/... function shorter
 
     Example:
-        >>>
+        Chain function to reduce many parentheses to make the code readable
+        >>> _([5, 2, 3]).ifilter(lambda x: x % 2 != 0).map(lambda x: x ** 2)
+        [25, 9]
+
+        Compare to python3 solution
+        >>> list(map(lambda x: x ** 2, filter(lambda x: x % 2 != 0, [5, 2, 3])))
+        [25, 9]
+
+        Support looping like normal map/filter object (avoid create unnecessary list)
+        >>> for e in _([5, 2, 3]).imap(lambda x: x ** 2): print(e);
+        25
+        4
+        9
+
+        Also support print list
+        >>> print(_([5, 2, 3]))
+        _([5, 2, 3])
     """
 
     def __init__(self, array: Union[Iterable[T], List[T]]) -> None:
@@ -178,6 +196,76 @@ class _(Generic[T]):
             [(5, 'yellow'), (4, 'green'), (1, 'black'), (3, 'pink')]
         """
         return unique_values(self.array, key)
+
+    def forall(self, func: Callable[[T], Any]) -> '_[T]':
+        """Apply a function to all element in the wrapper, and return itself
+
+        Example:
+            >>> _([[5, 'yellow'], [4, 'green'], [1, 'black', 'hair']]).forall(lambda x: append2list(x, len(x))).tolist()
+            [[5, 'yellow', 2], [4, 'green', 2], [1, 'black', 'hair', 3]]
+        """
+        all(func(x) or True for x in self.array)
+        return self
+
+    def all(self, key: Callable[[T], bool]=None) -> bool:
+        """Return True if all elements of the wrapper are true (or if the wrapper is empty)
+
+        Example:
+            >>> _([1, 2, 3]).all(lambda x: x > 0)
+            True
+            >>> _([1, 2, -1]).all(lambda x: x > 0)
+            False
+            >>> _([True, True, True]).all()
+            True
+        """
+        if key is None:
+            return all(self.array)
+        return all(key(x) for x in self.array)
+
+    def any(self, key: Callable[[T], bool]=None) -> bool:
+        """Return True if any element of the wrapper is true. If the wrapper is empty, return False
+
+        Example:
+            >>> _([1, 2, 3]).any(lambda x: x < 0)
+            False
+            >>> _([1, 2, -1]).any(lambda x: x < 0)
+            True
+            >>> _([False, False, True]).any()
+            True
+        """
+        if key is None:
+            return any(self.array)
+        return any(key(x) for x in self.array)
+
+    def enumerate(self) -> '_[Tuple[int, T]]':
+        """Return a wrapped enumerate object
+
+        Example:
+            >>> res = _([1, 2, 3]).enumerate()
+            >>> assert isinstance(res, _); list(res.get_value())
+            [(0, 1), (1, 2), (2, 3)]
+        """
+        return _(enumerate(self.array))
+
+    def tolist(self) -> List[T]:
+        """Get content of this wrapper, convert to list if necessary
+
+        Example:
+            >>> _([1, 2, 3]).enumerate().tolist()
+            [(0, 1), (1, 2), (2, 3)]
+        """
+        if isinstance(self.array, list):
+            return self.array
+        return list(self.array)
+
+    def flatten(self):
+        """Flatten nested list
+
+        Example:
+            >>> _([[5, 2], [3, 1], [2, 2]]).flatten().tolist()
+            [5, 2, 3, 1, 2, 2]
+        """
+        return _(flatten(self.array))
 
     def __str__(self):
         return "_(%s)" % self.array
