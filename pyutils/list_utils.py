@@ -109,6 +109,10 @@ class _(Generic[T]):
     def __init__(self, array: Union[Iterable[T], List[T]]) -> None:
         self.array: Union[Iterable[T], List[T]] = array
 
+    def get_value(self) -> Union[Iterable[T], List[T]]:
+        """Get content of this wrapper"""
+        return self.array
+
     def imap(self, func: Callable[[T], V]) -> '_[V]':
         """Return a wrapped iterator that applies function to every item of iterable, yielding the results
 
@@ -150,6 +154,33 @@ class _(Generic[T]):
             [2]
         """
         return [v for v in self.array if func(v)]
+
+    def iunique(self, key: Callable[[T], Union[str, int, float]]=None) -> '_[T]':
+        """Return a new wrapped array which have no duplication, and keep original order
+
+        Example:
+            >>> _([5, 4, 1, 4, 3]).iunique().get_value()
+            [5, 4, 1, 3]
+
+            >>> _([(5, "yellow"), (4, "green"), (1, "black"), (4, "black"), (3, "pink")]).iunique(lambda x: x[0]).get_value()
+            [(5, 'yellow'), (4, 'green'), (1, 'black'), (3, 'pink')]
+        """
+        return _(unique_values(self.array, key))
+
+    def unique(self, key: Callable[[T], Union[str, int, float]]=None) -> 'List[T]':
+        """Return a new array which have no duplication, and keep original order
+
+        Example:
+            >>> _([5, 4, 1, 4, 3]).unique()
+            [5, 4, 1, 3]
+
+            >>> _([(5, "yellow"), (4, "green"), (1, "black"), (4, "black"), (3, "pink")]).unique(lambda x: x[0])
+            [(5, 'yellow'), (4, 'green'), (1, 'black'), (3, 'pink')]
+        """
+        return unique_values(self.array, key)
+
+    def __str__(self):
+        return "_(%s)" % self.array
 
     def __iter__(self):
         """Return an iterator so that we can use to loop through"""
