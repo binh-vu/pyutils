@@ -81,6 +81,7 @@ class Timer(object):
     def reset(self) -> 'Timer':
         self.total_time = 0
         self.count = 0
+        self.start_time = time.time()
         return self
 
     def start(self) -> 'Timer':
