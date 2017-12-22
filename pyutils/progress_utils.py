@@ -78,17 +78,20 @@ class Timer(object):
         self.count = 0
         self.start_time = None
 
-    def reset(self):
+    def reset(self) -> 'Timer':
         self.total_time = 0
         self.count = 0
+        return self
 
-    def start(self):
+    def start(self) -> 'Timer':
         self.start_time = time.time()
+        return self
 
-    def lap(self):
+    def lap(self) -> 'Timer':
         self.total_time = self.total_time + (time.time() - self.start_time)
         self.start_time = time.time()
         self.count += 1
+        return self
 
     def get_average_time(self, precision=4):
         return '%.{0}f s'.format(precision) % (self.get_raw_average_time())
