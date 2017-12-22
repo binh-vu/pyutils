@@ -30,7 +30,8 @@ class Progress(object):
             if self.current == 1:
                 self.average_task_time = one_task_time
             else:
-                self.average_task_time = float(self.average_task_time * self.current + one_task_time) / (self.current + 1)
+                self.average_task_time = float(self.average_task_time * self.current + one_task_time) / (
+                    self.current + 1)
 
         self.current += 1
         self.last_time = time.time()
@@ -65,14 +66,11 @@ class Progress(object):
             total_time_str = 'Total time: ' + str(datetime.now() - self.start_time)[:-3]
             report_str.append(total_time_str)
 
-        return '%.2f%% (%s/%s). %s' % (
-            self.current * 100.0 / self.total,
-            self.current, self.total, '. '.join(report_str)
-        )
+        return '%.2f%% (%s/%s). %s' % (self.current * 100.0 / self.total, self.current, self.total,
+                                       '. '.join(report_str))
 
 
 class Timer(object):
-
     def __init__(self) -> None:
         self.total_time = 0
         self.count = 0
@@ -103,9 +101,12 @@ class Timer(object):
     def get_total_time(self, precision=4):
         return '%.{0}f s'.format(precision) % self.total_time
 
+    def report(self, precision=4):
+        return "%s times: %s (average: %s)" % (self.count, self.get_total_time(precision),
+                                               self.get_average_time(precision))
+
 
 class EmpiricalExpectation(object):
-
     def __init__(self) -> None:
         self.total = 0.0
         self.count = 0
