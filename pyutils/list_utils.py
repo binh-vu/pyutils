@@ -267,6 +267,16 @@ class _(Generic[T]):
         """
         return _(flatten(self.array))
 
+    def join(self, delimiter: str) -> str:
+        """Join all elements of a list/iterable separated by delimiter. Elements are auto-converted to string by via
+        str function
+
+        Example:
+            >>> _([5, 2, 1, 2, 3]).join(",")
+            '5,2,1,2,3'
+        """
+        return delimiter.join((str(x) for x in self.array))
+
     def __str__(self):
         return "_(%s)" % self.array
 
