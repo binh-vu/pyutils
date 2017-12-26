@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
+from itertools import chain
 from typing import List, Any, Iterable, Callable, Union, Dict, Generic
 from typing import TypeVar
 
@@ -122,10 +123,18 @@ class _(Generic[T]):
         Also support print list
         >>> print(_([5, 2, 3]))
         _([5, 2, 3])
+
+        Support chainning list of iterable/array
+
+        >>> _([5, 2], ['a', 'b', 'c']).join(",")
+        '5,2,a,b,c'
     """
 
-    def __init__(self, array: Union[Iterable[T], List[T]]) -> None:
-        self.array: Union[Iterable[T], List[T]] = array
+    def __init__(self, *arrays: Union[Iterable[T], List[T]]) -> None:
+        if len(arrays) == 1:
+            self.array: Union[Iterable[T], List[T]] = arrays[0]
+        else:
+            self.array: Union[Iterable[T], List[T]] = chain(*arrays)
 
     def get_value(self) -> Union[Iterable[T], List[T]]:
         """Get content of this wrapper"""
@@ -277,7 +286,7 @@ class _(Generic[T]):
         """
         return delimiter.join((str(x) for x in self.array))
 
-    def __str__(self):
+    def __repr__(self):
         return "_(%s)" % self.array
 
     def __iter__(self):
