@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from itertools import chain
-from typing import List, Any, Iterable, Callable, Union, Dict, Generic
+from typing import List, Any, Iterable, Callable, Union, Dict, Generic, Optional
 from typing import TypeVar
+
+from functools import reduce
 
 T = TypeVar('T')
 V = TypeVar('V')
@@ -285,6 +287,27 @@ class _(Generic[T]):
             '5,2,1,2,3'
         """
         return delimiter.join((str(x) for x in self.array))
+
+    def sum(self) -> float:
+        """Sum all elements
+
+        Example:
+            >>> _([5, 2, 1, 2, 3]).sum()
+            13
+        """
+        return sum(self.array)
+
+    def reduce(self, func: Callable[[V, T], V], initializer: Optional[V]=None):
+        """Short-hand for reduce function
+
+        Example:
+            >>> _([5, 2, 1, 2, 3]).reduce(lambda a, b: a + b)
+            13
+        """
+        if initializer is None:
+            # passing None to reduce function doesn't work as expected
+            return reduce(func, self.array)
+        return reduce(func, self.array, initializer)
 
     def __repr__(self):
         return "_(%s)" % self.array
