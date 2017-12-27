@@ -269,12 +269,23 @@ class _(Generic[T]):
             return self.array
         return list(self.array)
 
+    def todict(self):
+        """Convert a list/iterable of (key, value) pair to dictionary
+
+        Example:
+            >>> _([[5, 2], [3, 1], [2, 2]]).todict()
+            {5: 2, 3: 1, 2: 2}
+        """
+        return dict(self.array)
+
     def flatten(self):
-        """Flatten nested list
+        """Flatten nested list by one level
 
         Example:
             >>> _([[5, 2], [3, 1], [2, 2]]).flatten().tolist()
             [5, 2, 3, 1, 2, 2]
+            >>> _([[[5, 2]], [[3, 1]], [[2, 2]]]).flatten().tolist()
+            [[5, 2], [3, 1], [2, 2]]
         """
         return _(flatten(self.array))
 
