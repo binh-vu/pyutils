@@ -308,12 +308,39 @@ class _(Generic[T]):
         """
         return sum(self.array)
 
+    def wsort(self, key: Callable[[T], V]=None, reverse: bool=False) -> '_[T]':
+        """Return a new wrapped sorted list
+
+        Example:
+            >>> _([5, 2, 1, 2, 3]).wsort()
+            _([1, 2, 2, 3, 5])
+
+            >>> _([(5, "yellow"), (4, "green"), (1, "black"), (3, "pink")]).wsort(key=lambda x: x[0])
+            _([(1, 'black'), (3, 'pink'), (4, 'green'), (5, 'yellow')])
+
+            >>> _([(5, "yellow"), (4, "green"), (1, "black"), (3, "pink")]).wsort(key=lambda x: x[0], reverse=True)
+            _([(5, 'yellow'), (4, 'green'), (3, 'pink'), (1, 'black')])
+        """
+        return _(sorted(self.array, key=key, reverse=reverse))
+
+    def sort(self, key: Callable[[T], V]=None, reverse: bool=False) -> 'List[T]':
+        """Return a new sorted list
+
+        Example:
+            >>> _([5, 2, 1, 2, 3]).sort()
+            [1, 2, 2, 3, 5]
+        """
+        return sorted(self.array, key=key, reverse=reverse)
+
     def reduce(self, func: Callable[[V, T], V], initializer: Optional[V]=None):
         """Short-hand for reduce function
 
         Example:
             >>> _([5, 2, 1, 2, 3]).reduce(lambda a, b: a + b)
             13
+
+            >>> _([5, 2, 1, 2, 3]).reduce(lambda a, b: a + b, 10)
+            23
         """
         if initializer is None:
             # passing None to reduce function doesn't work as expected
