@@ -71,10 +71,12 @@ class Progress(object):
 
 
 class Timer(object):
-    def __init__(self) -> None:
+    def __init__(self, time_unit: str='s') -> None:
         self.total_time = 0
         self.count = 0
         self.start_time = None
+        self.time_unit_str = time_unit
+        self.time_unit = {'s': 1, 'ms': 1000}[time_unit]
 
     def reset(self) -> 'Timer':
         self.total_time = 0
@@ -93,13 +95,13 @@ class Timer(object):
         return self
 
     def get_average_time(self, precision=4):
-        return '%.{0}f s'.format(precision) % (self.get_raw_average_time())
+        return '%.{0}f %s'.format(precision) % (self.get_raw_average_time() * self.time_unit, self.time_unit_str)
 
     def get_raw_average_time(self):
         return float(self.total_time) / self.count
 
     def get_total_time(self, precision=4):
-        return '%.{0}f s'.format(precision) % self.total_time
+        return '%.{0}f %s'.format(precision) % (self.time_unit * self.total_time, self.time_unit_str)
 
     def report(self, precision=4):
         return "%s times: %s (average: %s)" % (self.count, self.get_total_time(precision),
