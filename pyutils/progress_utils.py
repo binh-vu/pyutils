@@ -10,12 +10,12 @@ class Progress(object):
         Help print beautiful progress (percentage, total, estimate time, etc.)
     """
 
-    def __init__(self, total: int, start_time=False, current_time=False, eta=True, time_per_task=True, total_time=True, ms_threshold=1) -> None:
-        self.total_time = total_time
-        self.time_per_task = time_per_task
-        self.eta = eta
-        self.current_time = current_time
-        self.start_time = start_time
+    def __init__(self, total: int, report_start_time=False, report_current_time=False, report_eta=True, report_time_per_task=True, report_total_time=True, ms_threshold=1) -> None:
+        self.report_total_time = report_total_time
+        self.report_time_per_task = report_time_per_task
+        self.report_eta = report_eta
+        self.report_current_time = report_current_time
+        self.report_start_time = report_start_time
         self.ms_threshold = ms_threshold  # convert to ms if average task time less than this number, otherwise using default: HH:MM:SS format
 
         self.total: int = total
@@ -47,14 +47,14 @@ class Progress(object):
     def report(self):
         report_str = []
 
-        if self.start_time:
+        if self.report_start_time:
             report_str.append('Start time: ' + self.start_time.strftime('%Y-%m-%d %H:%M:%S'))
 
-        if self.current_time:
+        if self.report_current_time:
             current_time_str = 'Current time: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             report_str.append(current_time_str)
 
-        if self.time_per_task:
+        if self.report_time_per_task:
             task_time_str = 'Time per task: N/A'
             if self.current > 1:
                 task_time_str = round(self.average_task_time, 3)
@@ -65,7 +65,7 @@ class Progress(object):
                 task_time_str = 'Time per task: ' + task_time_str
             report_str.append(task_time_str)
 
-        if self.eta:
+        if self.report_eta:
             eta_str = 'N/A'
             if self.current > 1:
                 eta_str = round((self.total - self.current) * self.average_task_time, 3)
@@ -73,7 +73,7 @@ class Progress(object):
             eta_str = 'ETA: ' + eta_str
             report_str.append(eta_str)
 
-        if self.total_time:
+        if self.report_total_time:
             total_time_str = 'Total time: ' + str(datetime.now() - self.start_time)[:-3]
             report_str.append(total_time_str)
 
@@ -83,25 +83,25 @@ class Progress(object):
                                        '. '.join(report_str))
 
     def summary(self):
-        start_time = self.start_time
-        current_time = self.current_time
-        eta = self.eta
-        total_time = self.total_time
-        time_per_task = self.time_per_task
+        report_start_time = self.report_start_time
+        report_current_time = self.report_current_time
+        report_eta = self.report_eta
+        report_total_time = self.report_total_time
+        report_time_per_task = self.report_time_per_task
 
-        self.start_time = True
-        self.current_time = True
-        self.eta = False
-        self.total_time = True
-        self.time_per_task = True
+        self.report_start_time = True
+        self.report_current_time = True
+        self.report_eta = False
+        self.report_total_time = True
+        self.report_time_per_task = True
 
         report = "SUMMARY: " + self.report()
 
-        self.start_time = start_time
-        self.current_time = current_time
-        self.eta = eta
-        self.total_time = total_time
-        self.time_per_task = time_per_task
+        self.report_start_time = report_start_time
+        self.report_current_time = report_current_time
+        self.report_eta = report_eta
+        self.report_total_time = report_total_time
+        self.report_time_per_task = report_time_per_task
 
         return report
 
