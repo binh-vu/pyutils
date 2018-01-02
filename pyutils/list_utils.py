@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from itertools import chain
-from typing import List, Any, Iterable, Callable, Union, Dict, Generic, Optional
+from typing import List, Any, Iterable, Callable, Union, Dict, Generic, Optional, Tuple
 from typing import TypeVar
 
 from functools import reduce
@@ -346,6 +346,39 @@ class _(Generic[T]):
             # passing None to reduce function doesn't work as expected
             return reduce(func, self.array)
         return reduce(func, self.array, initializer)
+
+    def unzip2(self) -> Tuple[List, List]:
+        """Short-hand for unzip list of pair-elements to 2 list
+
+        Example:
+            >>> _([[5, 3], [2, 1], [3, 9]]).unzip2()
+            ([5, 2, 3], [3, 1, 9])
+
+            >>> _(((i, i+1) for i in range(5))).unzip2()
+            ([0, 1, 2, 3, 4], [1, 2, 3, 4, 5])
+        """
+        lista, listb = [], []
+        for a, b in self.array:
+            lista.append(a)
+            listb.append(b)
+        return lista, listb
+
+    def unzip3(self) -> Tuple[List, List, List]:
+        """Short-hand for unzip list of triple-elements to 3 list
+
+        Example:
+            >>> _([[5, 3, 'a'], [2, 1, 'b'], [3, 9, 'c']]).unzip3()
+            ([5, 2, 3], [3, 1, 9], ['a', 'b', 'c'])
+
+            >>> _(((i, i+1, i+2) for i in range(5))).unzip3()
+            ([0, 1, 2, 3, 4], [1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
+        """
+        lista, listb, listc = [], [], []
+        for a, b, c in self.array:
+            lista.append(a)
+            listb.append(b)
+            listc.append(c)
+        return lista, listb, listc
 
     def __repr__(self):
         return "_(%s)" % self.array
