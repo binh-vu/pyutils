@@ -138,6 +138,16 @@ class _(Generic[T]):
         else:
             self.array: Union[Iterable[T], List[T]] = chain(*arrays)
 
+    @staticmethod
+    def head(array) -> T:
+        """Take first element in array"""
+        return array[0]
+
+    @staticmethod
+    def tuple2func(func1, func2):
+        """Return a function that take an input and output a tuple resulted from calling func1 and func2"""
+        return lambda e: (func1(e), func2(e))
+
     def get_value(self) -> Union[Iterable[T], List[T]]:
         """Get content of this wrapper"""
         return self.array
