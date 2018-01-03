@@ -77,7 +77,6 @@ def group_by(array: Iterable[T], key: Callable[[T], Union[str, int, float]]=None
         >>> group_by([(5, 'a'), (1, 'b'), (3, 'a'), (1, 'a'), (5, 'c'), (2, 'd')], lambda x: x[0])
         [[(5, 'a'), (5, 'c')], [(1, 'b'), (1, 'a')], [(3, 'a')], [(2, 'd')]]
     """
-
     if preserve_order:
         values: Dict[Union[str, int, float], List[T]] = OrderedDict()
     else:
@@ -92,6 +91,25 @@ def group_by(array: Iterable[T], key: Callable[[T], Union[str, int, float]]=None
         values[v_key].append(v)
 
     return list(values.values())
+
+
+def split_by_size(array: Iterable[T], size: int) -> Iterable[List[T]]:
+    """Split into multiple small array, each of them have `size` elements, except the last one
+
+    Example:
+        >>> list(split_by_size([5, 3, 1, 2], 2))
+        [[5, 3], [1, 2]]
+        >>> list(split_by_size([5, 3, 1, 2, 3], 2))
+        [[5, 3], [1, 2], [3]]
+    """
+    chunk = []
+    for e in array:
+        chunk.append(e)
+        if len(chunk) == size:
+            yield chunk
+            chunk = []
+    if len(chunk) > 0:
+        yield chunk
 
 
 def flatten(array: Iterable[Iterable[T]]) -> List[T]:
@@ -151,6 +169,9 @@ class _(Generic[T]):
     def get_value(self) -> Union[Iterable[T], List[T]]:
         """Get content of this wrapper"""
         return self.array
+
+    def isplit(self, size: int) -> '_[List[T]]':
+        return _(split_by_size(self.array, size))
 
     def imap(self, func: Callable[[T], V]) -> '_[V]':
         """Return a wrapped iterator that applies function to every item of iterable, yielding the results
