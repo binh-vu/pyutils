@@ -8,6 +8,7 @@ from typing import TypeVar
 from functools import reduce
 
 T = TypeVar('T')
+K = TypeVar('K')
 V = TypeVar('V')
 
 
@@ -122,7 +123,7 @@ def flatten(array: Iterable[Iterable[T]]) -> List[T]:
     return [e for es in array for e in es]
 
 
-class _(Generic[T]):
+class _(Generic[Union[T, List[K]]]):
     """List wrapper to write map/reduce/filter/... function shorter
 
     Example:
@@ -184,6 +185,17 @@ class _(Generic[T]):
             [1, 4, 9]
         """
         return _(map(func, self.array))
+
+    def iisubmap(self, func: Callable[[K], V]) -> '_[Iterable[V]]':
+        """Return a wrapped iterator that applies function to every item of item of iterable"""
+        return _(map(lambda e: map(func, e), self.array))
+
+    def isubmap(self, func: Callable[[K], V]) -> '_[List[V]]':
+        """"""
+        return _(map(lambda es: [func(x) for x in es], self.array))
+
+    def submap(self, func: Callable[[K], V]) -> 'List[List[V]]':
+        return [[func(e) for e in es] for es in self.array]
 
     def ifilter(self, func: Callable[[T], bool]) -> '_[T]':
         """Construct a wrapped iterator from those elements of iterable for which function returns true
