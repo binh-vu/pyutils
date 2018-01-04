@@ -123,7 +123,7 @@ def flatten(array: Iterable[Iterable[T]]) -> List[T]:
     return [e for es in array for e in es]
 
 
-class _(Generic[Union[T, List[K]]]):
+class _(Generic[T]):
     """List wrapper to write map/reduce/filter/... function shorter
 
     Example:
