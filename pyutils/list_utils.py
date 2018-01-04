@@ -332,6 +332,9 @@ class _(Generic[T]):
         """
         return _(flatten(self.array))
 
+    def iflatten(self):
+        return _((e for es in self.array for e in es))
+
     def join(self, delimiter: str) -> str:
         """Join all elements of a list/iterable separated by delimiter. Elements are auto-converted to string by via
         str function
