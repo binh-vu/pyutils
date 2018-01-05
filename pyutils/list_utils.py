@@ -113,16 +113,6 @@ def split_by_size(array: Iterable[T], size: int) -> Iterable[List[T]]:
         yield chunk
 
 
-def flatten(array: Iterable[Iterable[T]]) -> List[T]:
-    """Flatten nested list
-
-    Example:
-        >>> flatten([[5, 2], [3, 1], [2, 2]])
-        [5, 2, 3, 1, 2, 2]
-    """
-    return [e for es in array for e in es]
-
-
 class _(Generic[T]):
     """List wrapper to write map/reduce/filter/... function shorter
 
@@ -325,14 +315,20 @@ class _(Generic[T]):
         """Flatten nested list by one level
 
         Example:
-            >>> _([[5, 2], [3, 1], [2, 2]]).flatten().tolist()
+            >>> _([[5, 2], [3, 1], [2, 2]]).flatten()
             [5, 2, 3, 1, 2, 2]
-            >>> _([[[5, 2]], [[3, 1]], [[2, 2]]]).flatten().tolist()
-            [[5, 2], [3, 1], [2, 2]]
         """
-        return _(flatten(self.array))
+        return [e for es in self.array for e in es]
 
     def iflatten(self):
+        """Flatten nested list by one level
+
+        Example:
+            >>> _([[5, 2], [3, 1], [2, 2]]).iflatten().tolist()
+            [5, 2, 3, 1, 2, 2]
+            >>> _([[[5, 2]], [[3, 1]], [[2, 2]]]).iflatten().tolist()
+            [[5, 2], [3, 1], [2, 2]]
+        """
         return _((e for es in self.array for e in es))
 
     def join(self, delimiter: str) -> str:
