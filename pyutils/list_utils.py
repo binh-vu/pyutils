@@ -199,6 +199,17 @@ class _(Generic[T]):
         """
         return _(filter(func, self.array))
 
+    def first(self, func: Callable[[T], bool], default=None, raise_exception: bool=True) -> Optional[T]:
+        """Return first element statisfy `func`
+
+        Example:
+            >>> _([1, 2, 3]).first(lambda x: x > 1)
+            2
+        """
+        if raise_exception:
+            return next(iter(filter(func, self.array)))
+        return next(iter(filter(func, self.array)), default)
+
     def map(self, func: Callable[[T], V]) -> 'List[V]':
         """Return new array that every item is result of func
 
