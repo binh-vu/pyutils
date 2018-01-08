@@ -161,6 +161,14 @@ class _(Generic[T]):
         """Get content of this wrapper"""
         return self.array
 
+    def group_by_key(self):
+        values: Dict[Union[str, int, float], List[T]] = {}
+        for v_key, v in self.array:
+            if v_key not in values:
+                values[v_key] = []
+            values[v_key].append(v)
+        return _(values.items())
+
     def isplit(self, size: int) -> '_[List[T]]':
         return _(split_by_size(self.array, size))
 
