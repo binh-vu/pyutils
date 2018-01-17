@@ -402,6 +402,9 @@ class _(Generic[T]):
 
             >>> _([5, 2, 1, 2, 3]).reduce(lambda a, b: a + b, 10)
             23
+
+            >>> _(["first", "second", "three"]).reduce(lambda a, b: a + "-" + b)
+            'first-second-three'
         """
         if initializer is None:
             # passing None to reduce function doesn't work as expected
