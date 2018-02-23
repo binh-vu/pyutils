@@ -3,8 +3,113 @@
 import logging
 import logging.config
 import os
+from pathlib import Path
 
-from pyutils.config_utils import Configuration
+from pyutils.config_utils import Configuration, load_config
+
+
+class DynamicFileHandler(logging.Handler):
+
+    def __init__(self, basedir, mode='a', encoding=None, delay=False, folder_base: bool = False) -> None:
+        self.base_dir = Path(basedir)
+        self.folder_base = folder_base
+        self.mode = mode
+        self.encoding = encoding
+        self.delay = delay
+        self.level = None
+        self.formatter = None
+        self.logger_name = None
+        self.file_handler = None
+
+        if self.mode == 'a':
+            assert not self.folder_base, "Wrong configuration, shouldn't be folder base if you are appending to a log file"
+
+    def get_log_file(self, logger_name):
+        """Logfile will store in subdirectory of base_dir
+
+        basedir = /log
+        E.g:
+            name: app => /log/app.log
+            name: app.abc => /log/app/abc.log
+            name: abc.system.report.abc => /log/app/system.report/abc.log
+
+        In case it is folder base:
+            name: app => /log/app_log/s001.log
+            name: app.abc => /log/app/abc_log/s001.log
+            name: app.system.report.abc => /log/app/system.report/abc_log/s001.log
+        """
+        namespaces = logger_name.split(".")
+
+        if not self.folder_base:
+            if len(namespaces) == 1:
+                filename = self.base_dir / f"{namespaces[0]}.log"
+            elif len(namespaces) == 2:
+                filename = self.base_dir / namespaces[0] / f"{namespaces[1]}.log"
+            else:
+                filename = self.base_dir / namespaces[0] / ".".join(namespaces[1:-1]) / f"{namespaces[-1]}.log"
+
+            filename.parent.mkdir(exist_ok=True, parents=True)
+        else:
+            if len(namespaces) == 1:
+                dname = self.base_dir / f"{namespaces[0]}_log"
+            elif len(namespaces) == 2:
+                dname = self.base_dir / namespaces[0] / f"{namespaces[1]}_log"
+            else:
+                dname = self.base_dir / namespaces[0] / ".".join(namespaces[1:-1]) / f"{namespaces[-1]}_log"
+
+            dname.mkdir(exist_ok=True, parents=True)
+            files = sorted(dname.iterdir(), reverse=True)
+            if len(files) == 0:
+                filename = dname / "s001.log"
+            else:
+                filename = dname / f"s{int(files[0].stem[1:]) + 1:03d}.log"
+
+        return filename
+
+    def setLevel(self, level):
+        self.level = level
+
+    def setFormatter(self, fmt):
+        self.formatter = fmt
+
+    def set_logger_name(self, name):
+        self.logger_name = name
+        self.file_handler = logging.FileHandler(self.get_log_file(name), self.mode, self.encoding, self.delay)
+        self.file_handler.setLevel(self.level)
+        self.file_handler.setFormatter(self.formatter)
+
+    def get_name(self):
+        return self.file_handler.get_name()
+
+    def set_name(self, name):
+        return self.file_handler.set_name(name)
+
+    def createLock(self):
+        self.file_handler.createLock()
+
+    def acquire(self):
+        self.file_handler.acquire()
+
+    def release(self):
+        self.file_handler.release()
+
+    def format(self, record):
+        self.file_handler.format(record)
+
+    def emit(self, record):
+        self.file_handler.emit(record)
+
+    def handle(self, record):
+        self.file_handler.handle(record)
+
+    def flush(self):
+        self.file_handler.flush()
+
+    def close(self):
+        self.file_handler.close()
+
+    def handleError(self, record):
+        self.file_handler.handleError(record)
 
 
 class Logger(object):
@@ -146,12 +251,18 @@ class Logger(object):
             if handler_name not in self.handlers:
                 # important to use configuration passed to dict_configurator instead of dict_config
                 # because it has been processed to change file
+                is_DynamicFileHandler = dict_configurator.config['handlers'][handler_name]["class"] == "pyutils.logging_utils.DynamicFileHandler"
                 handler = dict_configurator.configure_handler(
                     dict_configurator.config['handlers'][handler_name])
 
-                self.handlers[handler_name] = handler
+                if is_DynamicFileHandler:
+                    # compare with class_path because dict_configurator create a wrapped class
+                    handler.set_logger_name(name)
+                else:
+                    self.handlers[handler_name] = handler
+            else:
+                handler = self.handlers[handler_name]
 
-            handler = self.handlers[handler_name]
             logger.addHandler(handler)
 
         if 'filters' in logger_conf:
