@@ -112,6 +112,18 @@ class DynamicFileHandler(logging.Handler):
         self.file_handler.handleError(record)
 
 
+# SET TRACE LEVEL HERE
+logging.addLevelName(5, "TRACE")
+logging.TRACE = 5
+
+
+def log_trace(self, msg, *args, **kwargs):
+    self.log(5, msg, *args, **kwargs)
+
+
+logging.Logger.trace = log_trace
+
+
 class Logger(object):
 
     instance = None
@@ -158,8 +170,7 @@ class Logger(object):
                     if arg != 'id':
                         handler[arg] = new_handler[arg][i]
 
-                self.config.logging.handlers.set_conf(
-                    handler_name, handler, split_key=False)
+                self.config.logging.handlers.set_conf(handler_name, handler, split_key=False)
 
         # Update logging logger
         deleting_logger_names = []
@@ -167,8 +178,7 @@ class Logger(object):
         for logger_name in self.config.logging.loggers:
             if logger_name.startswith('$rolling') and logger_name[-1] == '$':
                 deleting_logger_names.append(logger_name)
-                new_loggers.append(
-                    self.config.logging.loggers[logger_name].to_dict())
+                new_loggers.append(self.config.logging.loggers[logger_name].to_dict())
 
         for logger_name in deleting_logger_names:
             del self.config.logging.loggers[logger_name]
@@ -179,16 +189,11 @@ class Logger(object):
                     new_logger[arg] = [new_logger[arg]] * len(new_logger['id'])
 
             if isinstance(new_logger['handlers'][0], str):
-                new_logger['handlers'] = [new_logger['handlers']
-                                          ] * len(new_logger['id'])
+                new_logger['handlers'] = [new_logger['handlers']] * len(new_logger['id'])
 
             for i, logger_name in enumerate(new_logger['id']):
-                logger = {
-                    arg: new_logger[arg][i]
-                    for arg in ['level', 'propagate', 'handlers']
-                }
-                self.config.logging.loggers.set_conf(
-                    logger_name, logger, split_key=False)
+                logger = {arg: new_logger[arg][i] for arg in ['level', 'propagate', 'handlers']}
+                self.config.logging.loggers.set_conf(logger_name, logger, split_key=False)
 
     def init(self):
         # Backup log file if needed
@@ -201,9 +206,7 @@ class Logger(object):
                     content = 0
                     if os.path.exists(handler.filename.as_path()):
                         with open(handler.filename.as_path(), 'rb') as f:
-                            content = len(
-                                f.read(5)
-                            )  # read first 5 bytes to determine if file is empty or not
+                            content = len(f.read(5))  # read first 5 bytes to determine if file is empty or not
                     if content > 0:
                         handler.filename.backup_path()
 
@@ -241,19 +244,18 @@ class Logger(object):
         formatters = dict_configurator.config.get('formatters', {})
         for fname in formatters:
             try:
-                formatters[fname] = dict_configurator.configure_formatter(
-                    formatters[fname])
+                formatters[fname] = dict_configurator.configure_formatter(formatters[fname])
             except Exception as e:
-                raise ValueError('Unable to configure formatter %r: %s' %
-                                 (fname, e))
+                raise ValueError('Unable to configure formatter %r: %s' % (fname, e))
 
         for handler_name in logger_conf['handlers']:
             if handler_name not in self.handlers:
                 # important to use configuration passed to dict_configurator instead of dict_config
                 # because it has been processed to change file
-                is_DynamicFileHandler = dict_configurator.config['handlers'][handler_name]["class"] == "pyutils.logging_utils.DynamicFileHandler"
-                handler = dict_configurator.configure_handler(
-                    dict_configurator.config['handlers'][handler_name])
+                is_DynamicFileHandler = dict_configurator.config['handlers'][handler_name][
+                    "class"
+                ] == "pyutils.logging_utils.DynamicFileHandler"
+                handler = dict_configurator.configure_handler(dict_configurator.config['handlers'][handler_name])
 
                 if is_DynamicFileHandler:
                     # compare with class_path because dict_configurator create a wrapped class
