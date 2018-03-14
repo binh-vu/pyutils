@@ -10,7 +10,14 @@ class Progress(object):
         Help print beautiful progress (percentage, total, estimate time, etc.)
     """
 
-    def __init__(self, total: int, report_start_time=False, report_current_time=False, report_eta=True, report_time_per_task=True, report_total_time=True, ms_threshold=1) -> None:
+    def __init__(self,
+                 total: int,
+                 report_start_time=False,
+                 report_current_time=False,
+                 report_eta=True,
+                 report_time_per_task=True,
+                 report_total_time=True,
+                 ms_threshold=1) -> None:
         self.report_total_time = report_total_time
         self.report_time_per_task = report_time_per_task
         self.report_eta = report_eta
@@ -107,12 +114,14 @@ class Progress(object):
 
 
 class Timer(object):
-    def __init__(self, time_unit: str='s') -> None:
+    def __init__(self, time_unit: str = 's') -> None:
         self.total_time = 0
         self.count = 0
         self.start_time = None
         self.time_unit_str = time_unit
-        self.time_unit = {'s': 1, 'ms': 1000}[time_unit]
+        self.time_unit = {'s': 1, 'ms': 1000, 'us': 1000000, 'm': 1 / 60}[time_unit]
+        self.lap_min_time = 1e6
+        self.lap_max_time = 0
 
     def reset(self) -> 'Timer':
         self.total_time = 0
@@ -125,21 +134,35 @@ class Timer(object):
         return self
 
     def lap(self) -> 'Timer':
-        self.total_time = self.total_time + (time.time() - self.start_time)
-        self.start_time = time.time()
-        self.count += 1
-        return self
+        exec_time = time.time() - self.start_time
+        if exec_time > self.lap_max_time:
+            self.lap_max_time = exec_time
+        if exec_time < self.lap_min_time:
+            self.lap_min_time = exec_time
 
-    def get_average_time(self, precision=4):
-        return '%.{0}f %s'.format(precision) % (self.get_raw_average_time() * self.time_unit, self.time_unit_str)
+        self.total_time = self.total_time + exec_time
+        self.count += 1
+        self.start_time = time.time()
+        return self
 
     def get_raw_average_time(self):
         return float(self.total_time) / self.count
 
-    def get_total_time(self, precision=4):
-        return '%.{0}f %s'.format(precision) % (self.time_unit * self.total_time, self.time_unit_str)
+    def get_average_time(self, precision=4):
+        return self.format_time(self.get_raw_average_time(), precision)
 
-    def report(self, precision=4):
+    def get_total_time(self, precision=4):
+        return self.format_time(self.total_time, precision)
+
+    def format_time(self, time: float, precision=4):
+        return '%.{0}f %s'.format(precision) % (self.time_unit * time, self.time_unit_str)
+
+    def report(self, precision=4, full_report: bool = False):
+        if full_report:
+            return "%s times: %s (min/max/average: %s/%s/%s)" % (self.count, self.get_total_time(precision),
+                                                                 self.format_time(self.lap_min_time, precision),
+                                                                 self.format_time(self.lap_max_time, precision),
+                                                                 self.get_average_time(precision))
         return "%s times: %s (average: %s)" % (self.count, self.get_total_time(precision),
                                                self.get_average_time(precision))
 
