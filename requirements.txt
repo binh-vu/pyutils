@@ -7,3 +7,4 @@ pycorenlp
 ujson
 numpy
 coverage
+bson
